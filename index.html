@@ -713,8 +713,10 @@ function animateResult(score, level, desc, cls, bd) {
   rc.innerHTML = `<div class="text-center">
     <p style="font-size:13px;font-weight:500;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.1em" id="analysisText"></p>
     <div id="scoreReveal" style="opacity:0;margin-top:20px">
-      <div style="display:flex;align-items:baseline;justify-content:center;gap:24px"><span class="caption">ARLA Score</span><span class="result-level-desc" id="levelDesc" style="opacity:0"></span></div>
-      <div style="display:flex;align-items:baseline;justify-content:center;gap:24px"><span class="result-score" id="scoreNum">0</span><span class="result-level-num risk-${cls}" id="levelNum" style="font-size:56px;opacity:0"></span></div>
+      <div style="display:flex;justify-content:center;gap:40px">
+        <div style="text-align:center"><div class="caption">ARLA Score</div><div class="result-score" id="scoreNum">0</div></div>
+        <div style="text-align:center"><div class="result-level-desc" id="levelDesc" style="opacity:0"></div><div class="result-level-num risk-${cls}" id="levelNum" style="font-size:56px;opacity:0"></div></div>
+      </div>
     </div></div>
     <div id="breakdownReveal" style="opacity:0">
       <div class="result-breakdown">
@@ -787,7 +789,7 @@ function printResult() {
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>*{margin:0;padding:0;box-sizing:border-box}body{background:#fff;color:#1d1d1f;font-family:'Inter',system-ui,sans-serif;padding:40px;font-size:14px;-webkit-font-smoothing:antialiased}
     .card{max-width:600px;margin:0 auto}
-    .logo{width:64px;height:64px;margin:0 auto 16px}.logo svg{width:100%;height:100%}
+    .logo{width:180px;margin:0 auto 16px}.logo svg{width:100%;height:auto}
     .result-score{font-size:56px;font-weight:700;color:#1d1d1f}.result-level-num{font-size:72px;font-weight:800}
     .result-level-desc{font-size:17px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;margin-top:8px;color:#6e6e73}
     .risk-1{color:#43a047}.risk-2{color:#f9a825}.risk-3{color:#ef6c00}.risk-4{color:#e53935}.risk-5{color:#d32f2f}
