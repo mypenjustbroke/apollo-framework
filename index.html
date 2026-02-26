@@ -713,9 +713,9 @@ function animateResult(score, level, desc, cls, bd) {
   rc.innerHTML = `<div class="text-center">
     <p style="font-size:13px;font-weight:500;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.1em" id="analysisText"></p>
     <div id="scoreReveal" style="opacity:0;margin-top:20px">
-      <div style="display:inline-flex;gap:48px;align-items:flex-end">
-        <div><div class="caption" style="text-align:center;width:100%">ARLA Score</div><div class="result-score" style="text-align:center" id="scoreNum">0</div></div>
-        <div><div class="result-level-desc" style="text-align:center;width:100%;opacity:0" id="levelDesc"></div><div class="result-level-num risk-${cls}" style="font-size:56px;text-align:center;opacity:0" id="levelNum"></div></div>
+      <div style="display:inline-flex;gap:48px">
+        <div><div class="caption" style="text-align:center;width:100%;line-height:1.4">ARLA Score</div><div class="result-score" style="text-align:center;line-height:1" id="scoreNum">0</div></div>
+        <div><div class="result-level-desc" style="text-align:center;width:100%;line-height:1.4;opacity:0" id="levelDesc"></div><div class="result-level-num risk-${cls}" style="font-size:56px;text-align:center;line-height:1;opacity:0" id="levelNum"></div></div>
       </div>
     </div></div>
     <div id="breakdownReveal" style="opacity:0">
