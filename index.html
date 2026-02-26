@@ -1,0 +1,832 @@
+<!--
+  ╔══════════════════════════════════════════════════════════════╗
+  ║  APOLLO RISK ASSESSMENT FRAMEWORK — Arrephoros Technologies  ║
+  ║  Version Two: Athena (Server-Side Auth)                      ║
+  ╠══════════════════════════════════════════════════════════════╣
+  ║                                                              ║
+  ║  SETUP:                                                      ║
+  ║  1. Create a Google Sheet named "Apollo"                     ║
+  ║  2. Extensions → Apps Script → paste Apollo-Backend.gs       ║
+  ║  3. Deploy → New Deployment → Web App                        ║
+  ║     Execute as: Me, Access: Anyone                           ║
+  ║  4. Copy the deployment URL into API_URL below               ║
+  ║  5. Host this file (GitHub Pages, etc.) and embed            ║
+  ║                                                              ║
+  ║  DEFAULT ADMIN (auto-seeded on first server request):        ║
+  ║  Username: SYSADMIN   Password: arrephoros                   ║
+  ║                                                              ║
+  ╚══════════════════════════════════════════════════════════════╝
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APOLLO — Arrephoros Technologies PLC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#050508;--bg2:#0a0d12;--bg3:#0d1117;--panel:#0c1018;
+  --red:#ff1a1a;--red-dim:#661010;--cyan:#00f0ff;--cyan-dim:#004a50;
+  --green:#00ff88;--gold:#ffd700;--orange:#ff8c00;--danger:#cc0000;
+  --text:#d0d0d0;--text-dim:#445;--border:#1a1f2e;--border-hi:#2a3050;
+  --font-mono:'Share Tech Mono',monospace;--font-display:'Orbitron',sans-serif;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font-mono);font-size:14px;line-height:1.6}
+
+/* ── SCANLINES ── */
+#scanlines{position:fixed;inset:0;z-index:9999;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px)}
+#scanlines::after{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at center,transparent 50%,rgba(0,0,0,.4) 100%)}
+
+/* ── GRID BG ── */
+#gridbg{position:fixed;inset:0;z-index:0;opacity:.06;
+  background-image:linear-gradient(var(--cyan) 1px,transparent 1px),linear-gradient(90deg,var(--cyan) 1px,transparent 1px);
+  background-size:60px 60px;animation:gridScroll 20s linear infinite}
+@keyframes gridScroll{to{background-position:60px 60px}}
+
+/* ── SCREEN BASE ── */
+.screen{position:fixed;inset:0;z-index:10;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;overflow-y:auto}
+.screen.active{display:flex}
+
+/* ── CORNER BRACKETS ── */
+.hud-panel{position:relative;background:var(--panel);border:1px solid var(--border);padding:32px;max-width:580px;width:100%}
+.hud-panel::before,.hud-panel::after{content:'';position:absolute;width:20px;height:20px;border-color:var(--cyan);border-style:solid;border-width:0;pointer-events:none}
+.hud-panel::before{top:-1px;left:-1px;border-top-width:2px;border-left-width:2px}
+.hud-panel::after{bottom:-1px;right:-1px;border-bottom-width:2px;border-right-width:2px}
+.hud-panel .corner-bl,.hud-panel .corner-tr{position:absolute;width:20px;height:20px;border-color:var(--cyan);border-style:solid;border-width:0;pointer-events:none}
+.hud-panel .corner-tr{top:-1px;right:-1px;border-top-width:2px;border-right-width:2px}
+.hud-panel .corner-bl{bottom:-1px;left:-1px;border-bottom-width:2px;border-left-width:2px}
+
+/* ── WATERMARK ── */
+.watermark{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;letter-spacing:4px;color:var(--red-dim);z-index:9998;text-transform:uppercase;font-family:var(--font-display);pointer-events:none}
+
+/* ── OWL SVG ── */
+.owl-logo{width:80px;height:80px;margin:0 auto 16px}
+.owl-logo svg{width:100%;height:100%;filter:drop-shadow(0 0 12px var(--red))}
+.owl-logo-sm{width:36px;height:36px;display:inline-block;vertical-align:middle}
+.owl-logo-sm svg{width:100%;height:100%;filter:drop-shadow(0 0 6px var(--red))}
+
+/* ── TYPOGRAPHY ── */
+.display-title{font-family:var(--font-display);font-weight:900;font-size:24px;letter-spacing:3px;text-transform:uppercase;color:#fff;text-shadow:0 0 20px var(--red),0 0 40px rgba(255,26,26,.3)}
+.sub-title{font-family:var(--font-display);font-size:11px;letter-spacing:5px;color:var(--cyan);text-transform:uppercase;margin-top:4px}
+.section-label{font-family:var(--font-display);font-size:13px;letter-spacing:4px;color:var(--cyan);text-transform:uppercase;margin-bottom:20px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.warning-text{color:var(--red);font-size:11px;letter-spacing:3px;text-transform:uppercase;animation:warningPulse 2s ease-in-out infinite}
+@keyframes warningPulse{0%,100%{opacity:.6}50%{opacity:1}}
+
+/* ── FORM ELEMENTS ── */
+.field{margin-bottom:18px}
+.field label{display:block;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--cyan);margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:10px 14px;font-family:var(--font-mono);font-size:13px;outline:none;transition:border-color .3s,box-shadow .3s}
+.field input:focus,.field select:focus{border-color:var(--cyan);box-shadow:0 0 8px rgba(0,240,255,.15)}
+.field input::placeholder{color:var(--text-dim)}
+
+/* ── BUTTONS ── */
+.btn{display:inline-block;padding:10px 28px;font-family:var(--font-display);font-size:12px;letter-spacing:3px;text-transform:uppercase;border:1px solid var(--red);color:var(--red);background:transparent;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.btn:hover{background:var(--red);color:#fff;box-shadow:0 0 20px rgba(255,26,26,.3)}
+.btn-cyan{border-color:var(--cyan);color:var(--cyan)}
+.btn-cyan:hover{background:var(--cyan);color:var(--bg);box-shadow:0 0 20px rgba(0,240,255,.3)}
+.btn-sm{padding:6px 16px;font-size:10px;letter-spacing:2px}
+.btn-danger{border-color:#ff4444;color:#ff4444}
+.btn-danger:hover{background:#ff4444;color:#fff}
+.btn-full{width:100%;text-align:center;margin-top:8px}
+
+/* ── YES/NO TOGGLE ── */
+.yn-group{display:flex;gap:8px;margin-top:6px}
+.yn-group .yn-btn{flex:1;padding:8px;text-align:center;border:1px solid var(--border);color:var(--text-dim);font-family:var(--font-mono);font-size:12px;cursor:pointer;transition:all .2s;text-transform:uppercase;letter-spacing:2px}
+.yn-btn.sel-yes{border-color:var(--red);color:var(--red);background:rgba(255,26,26,.08)}
+.yn-btn.sel-no{border-color:var(--green);color:var(--green);background:rgba(0,255,136,.05)}
+
+/* ── QUESTION BLOCK ── */
+.q-block{padding:14px 16px;border-left:2px solid var(--border);margin-bottom:14px;transition:all .3s;opacity:1}
+.q-block.hidden{display:none}
+.q-block .q-id{font-family:var(--font-display);font-size:10px;color:var(--red);letter-spacing:2px;margin-bottom:4px}
+.q-block .q-text{font-size:13px;color:var(--text);margin-bottom:8px}
+.q-block .q-note{font-size:11px;color:var(--text-dim);margin-top:6px;font-style:italic}
+
+/* ── SLIDER ── */
+input[type=range]{-webkit-appearance:none;width:100%;height:4px;background:var(--border);outline:none;border-radius:2px;margin:8px 0}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;background:var(--cyan);border-radius:50%;cursor:pointer;box-shadow:0 0 8px var(--cyan)}
+.severity-val{font-family:var(--font-display);color:var(--cyan);font-size:13px;text-align:right}
+
+/* ── PROGRESS BAR ── */
+.progress-bar{width:100%;height:3px;background:var(--border);margin-bottom:24px;position:relative}
+.progress-bar .fill{height:100%;background:linear-gradient(90deg,var(--red),var(--cyan));transition:width .4s ease;box-shadow:0 0 8px var(--cyan)}
+
+/* ── ADMIN TABLE ── */
+.user-table{width:100%;border-collapse:collapse;margin:12px 0}
+.user-table th,.user-table td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);font-size:12px}
+.user-table th{color:var(--cyan);font-family:var(--font-display);font-size:10px;letter-spacing:2px;text-transform:uppercase}
+.user-table tr:hover td{background:rgba(0,240,255,.03)}
+
+/* ── RESULTS ── */
+.result-box{text-align:center;padding:40px 24px;border:2px solid var(--border);position:relative;overflow:hidden}
+.result-box::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity 1s}
+.result-score{font-family:var(--font-display);font-size:48px;color:#fff;text-shadow:0 0 30px currentColor}
+.result-level-num{font-family:var(--font-display);font-size:80px;font-weight:900;line-height:1}
+.result-level-desc{font-family:var(--font-display);font-size:16px;letter-spacing:5px;text-transform:uppercase;margin-top:8px}
+.result-breakdown{text-align:left;margin-top:24px;padding:16px;border:1px solid var(--border);font-size:12px}
+.result-breakdown .rb-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.result-breakdown .rb-row span:last-child{color:var(--cyan);font-family:var(--font-display)}
+
+/* ── TYPING ANIMATION ── */
+.typewriter{overflow:hidden;white-space:nowrap;border-right:2px solid var(--cyan);animation:typing 1.5s steps(30) forwards,blinkCaret .6s step-end infinite}
+@keyframes typing{from{width:0}to{width:100%}}
+@keyframes blinkCaret{50%{border-color:transparent}}
+
+/* ── LOADING SCREEN ── */
+#loadingOverlay{position:fixed;inset:0;z-index:10000;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .8s}
+#loadingOverlay.fade-out{opacity:0;pointer-events:none}
+.loader-ring{width:60px;height:60px;border:2px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── RISK LEVEL COLORS ── */
+.risk-1{color:var(--green)}.risk-2{color:var(--gold)}.risk-3{color:var(--orange)}.risk-4{color:#ff4444}.risk-5{color:var(--danger);animation:dangerPulse 1s ease-in-out infinite}
+@keyframes dangerPulse{0%,100%{text-shadow:0 0 20px var(--danger)}50%{text-shadow:0 0 60px var(--danger),0 0 100px rgba(204,0,0,.4)}}
+.risk-border-1{border-color:var(--green);box-shadow:0 0 30px rgba(0,255,136,.15)}
+.risk-border-2{border-color:var(--gold);box-shadow:0 0 30px rgba(255,215,0,.15)}
+.risk-border-3{border-color:var(--orange);box-shadow:0 0 30px rgba(255,140,0,.15)}
+.risk-border-4{border-color:#ff4444;box-shadow:0 0 30px rgba(255,68,68,.2)}
+.risk-border-5{border-color:var(--danger);box-shadow:0 0 40px rgba(204,0,0,.3);animation:dangerBorder 1s ease-in-out infinite}
+@keyframes dangerBorder{0%,100%{box-shadow:0 0 40px rgba(204,0,0,.3)}50%{box-shadow:0 0 80px rgba(204,0,0,.5)}}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}::-webkit-scrollbar-thumb:hover{background:var(--border-hi)}
+
+/* ── MISC ── */
+.mt-16{margin-top:16px}.mt-24{margin-top:24px}.mt-8{margin-top:8px}.mb-8{margin-bottom:8px}.mb-16{margin-bottom:16px}
+.text-center{text-align:center}.text-red{color:var(--red)}.text-cyan{color:var(--cyan)}.text-dim{color:var(--text-dim)}
+.flex-row{display:flex;gap:8px;align-items:center}
+.error-msg{color:var(--red);font-size:12px;min-height:18px;margin-top:8px}
+.badge{display:inline-block;padding:2px 10px;font-size:10px;letter-spacing:2px;font-family:var(--font-display);text-transform:uppercase;border:1px solid;border-radius:2px}
+.assess-container{max-height:calc(100vh - 120px);overflow-y:auto;padding-right:8px}
+
+/* ── ANIMATE IN ── */
+@keyframes fadeSlideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.animate-in{animation:fadeSlideUp .5s ease forwards}
+.delay-1{animation-delay:.1s;opacity:0}.delay-2{animation-delay:.2s;opacity:0}.delay-3{animation-delay:.3s;opacity:0}.delay-4{animation-delay:.4s;opacity:0}
+</style>
+</head>
+<body>
+
+<!-- SCANLINES + GRID -->
+<div id="scanlines"></div>
+<div id="gridbg"></div>
+<div class="watermark">Arrephoros Confidential</div>
+
+<!-- LOADING -->
+<div id="loadingOverlay">
+  <div class="loader-ring"></div>
+  <p style="margin-top:16px;font-family:var(--font-display);font-size:10px;letter-spacing:4px;color:var(--text-dim);text-transform:uppercase">Initializing Apollo Framework</p>
+</div>
+
+<!-- ═══════════ LOGIN SCREEN ═══════════ -->
+<div class="screen active" id="loginScreen">
+  <div class="hud-panel" style="max-width:420px">
+    <span class="corner-tr"></span><span class="corner-bl"></span>
+    <div class="text-center">
+      <div class="owl-logo"><svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="50" r="46" fill="#ff1a1a"/>
+        <ellipse cx="36" cy="44" rx="14" ry="16" fill="#050508"/>
+        <ellipse cx="64" cy="44" rx="14" ry="16" fill="#050508"/>
+        <circle cx="36" cy="44" r="7" fill="#ff1a1a"/>
+        <circle cx="64" cy="44" r="7" fill="#ff1a1a"/>
+        <circle cx="36" cy="44" r="3" fill="#050508"/>
+        <circle cx="64" cy="44" r="3" fill="#050508"/>
+        <path d="M44 58 L50 68 L56 58" stroke="#050508" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M30 26 Q50 15 70 26" stroke="#050508" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <path d="M22 38 Q16 20 32 22" stroke="#050508" stroke-width="3" fill="none"/>
+        <path d="M78 38 Q84 20 68 22" stroke="#050508" stroke-width="3" fill="none"/>
+      </svg></div>
+      <div class="display-title" style="font-size:20px">Apollo</div>
+      <div class="sub-title" style="margin-top:2px;font-size:9px">Risk Assessment Framework</div>
+      <p style="margin-top:12px;font-size:10px;letter-spacing:2px;color:var(--text-dim)">ARREPHOROS TECHNOLOGIES PLC</p>
+      <p class="warning-text" style="margin-top:16px">&#9650; Authorized Personnel Only &#9650;</p>
+    </div>
+    <div style="margin-top:24px">
+      <div class="field"><label>Operative ID</label><input type="text" id="loginUser" placeholder="Enter username" autocomplete="off"></div>
+      <div class="field"><label>Access Key</label><input type="password" id="loginPass" placeholder="Enter password" autocomplete="off"></div>
+      <div class="error-msg" id="loginErr"></div>
+      <button class="btn btn-full" onclick="doLogin()">Authenticate</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ ADMIN SCREEN ═══════════ -->
+<div class="screen" id="adminScreen">
+  <div class="hud-panel" style="max-width:620px">
+    <span class="corner-tr"></span><span class="corner-bl"></span>
+    <div class="flex-row" style="justify-content:space-between;margin-bottom:20px">
+      <div>
+        <div class="section-label" style="margin-bottom:0;border:none;padding:0">System Administration</div>
+      </div>
+      <button class="btn btn-sm" onclick="doLogout()">Logout</button>
+    </div>
+
+    <!-- Add User -->
+    <div style="padding:16px;border:1px solid var(--border);margin-bottom:16px">
+      <div class="section-label" style="font-size:10px;margin-bottom:12px">Register Operative</div>
+      <div class="flex-row" style="gap:8px;flex-wrap:wrap">
+        <div class="field" style="flex:1;min-width:140px;margin-bottom:0"><input id="newUser" placeholder="Username"></div>
+        <div class="field" style="flex:1;min-width:140px;margin-bottom:0"><input id="newPass" type="password" placeholder="Password"></div>
+        <button class="btn btn-cyan btn-sm" onclick="addUser()">Add</button>
+      </div>
+      <div class="error-msg" id="adminErr"></div>
+    </div>
+
+    <!-- User List -->
+    <div style="max-height:240px;overflow-y:auto">
+      <table class="user-table">
+        <thead><tr><th>Operative ID</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody id="userTableBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Change Admin Pass -->
+    <div style="padding:16px;border:1px solid var(--border);margin-top:16px">
+      <div class="section-label" style="font-size:10px;margin-bottom:12px">Change Admin Access Key</div>
+      <div class="flex-row" style="gap:8px">
+        <div class="field" style="flex:1;margin-bottom:0"><input id="newAdminPass" type="password" placeholder="New admin password"></div>
+        <button class="btn btn-sm btn-danger" onclick="changeAdminPass()">Update</button>
+      </div>
+      <div class="error-msg" id="adminPassErr"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ ASSESSMENT SCREEN ═══════════ -->
+<div class="screen" id="assessScreen">
+  <div class="hud-panel" style="max-width:660px">
+    <span class="corner-tr"></span><span class="corner-bl"></span>
+    <div class="flex-row" style="justify-content:space-between;margin-bottom:4px">
+      <div class="flex-row">
+        <div class="owl-logo-sm"><svg viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="46" fill="#ff1a1a"/><ellipse cx="36" cy="44" rx="14" ry="16" fill="#050508"/><ellipse cx="64" cy="44" rx="14" ry="16" fill="#050508"/><circle cx="36" cy="44" r="7" fill="#ff1a1a"/><circle cx="64" cy="44" r="7" fill="#ff1a1a"/><circle cx="36" cy="44" r="3" fill="#050508"/><circle cx="64" cy="44" r="3" fill="#050508"/><path d="M44 58 L50 68 L56 58" stroke="#050508" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M30 26 Q50 15 70 26" stroke="#050508" stroke-width="4" fill="none" stroke-linecap="round"/></svg></div>
+        <span style="font-family:var(--font-display);font-size:14px;letter-spacing:3px;color:#fff;margin-left:4px">APOLLO</span>
+      </div>
+      <button class="btn btn-sm" onclick="doLogout()">Logout</button>
+    </div>
+    <div class="progress-bar"><div class="fill" id="progressFill" style="width:0%"></div></div>
+
+    <div class="assess-container" id="assessContainer">
+      <!-- Step 0: Suspect Info -->
+      <div class="assess-step active" id="step0">
+        <div class="section-label">Subject Intake</div>
+        <div class="field"><label>Subject Name / Identifier</label><input id="suspectName" placeholder="Enter suspect designation"></div>
+        <div class="field"><label>Assessment Period (Days)</label><input id="assessPeriod" type="number" min="1" max="30" value="7" placeholder="1-30"></div>
+        <div class="field"><label>Jurisdiction</label><input id="jurisdiction" placeholder="Enter jurisdiction name"></div>
+        <div class="field"><label>Investigating Operative</label><input id="investigator" readonly></div>
+      </div>
+
+      <!-- Step 1: Section 1 Conduct -->
+      <div class="assess-step" id="step1" style="display:none">
+        <div class="section-label">Section One — Conduct</div>
+        <div class="q-block" id="q1_1_block">
+          <div class="q-id">Assessment Point 1.1</div>
+          <div class="q-text">Has the suspect been exhibiting negative behavior in their contact with your service?</div>
+          <div class="yn-group"><div class="yn-btn" onclick="setYN('q1_1',true,this)">Yes (+1)</div><div class="yn-btn" onclick="setYN('q1_1',false,this)">No</div></div>
+        </div>
+        <div class="q-block" id="q1_2_block">
+          <div class="q-id">Assessment Point 1.2</div>
+          <div class="q-text">Has the suspect been exhibiting negative behavior towards members of the general population?</div>
+          <div class="yn-group"><div class="yn-btn" onclick="setYN('q1_2',true,this)">Yes (+1)</div><div class="yn-btn" onclick="setYN('q1_2',false,this)">No</div></div>
+        </div>
+        <div class="q-block hidden" id="q1_2d_block">
+          <div class="q-id">Assessment Point 1.2 — Supplementary</div>
+          <div class="q-text">Has the suspect acted discriminatorily towards any member for their association with or membership within a protected class in your jurisdiction?</div>
+          <div class="yn-group"><div class="yn-btn" onclick="setYN('q1_2d',true,this)">Yes (+1)</div><div class="yn-btn" onclick="setYN('q1_2d',false,this)">No</div></div>
+        </div>
+        <div class="q-block" id="q1_slur_block">
+          <div class="q-id">Assessment Point 1 — Slurs Addendum</div>
+          <div class="q-text">Has the suspect used slurs in their speech during the term of investigation?</div>
+          <div class="q-note">This does not include commonly understood expletive phrases, but a pejorative, derogatory, or insulting word/phrase designed to demean, belittle, or show contempt toward individuals or groups based on race, ethnicity, sexual orientation, gender, or other characteristics.</div>
+          <div class="yn-group"><div class="yn-btn" onclick="setYN('q1_slur',true,this)">Yes (+2)</div><div class="yn-btn" onclick="setYN('q1_slur',false,this)">No</div></div>
+        </div>
+      </div>
+
+      <!-- Step 2: Section 2 Prior Offences -->
+      <div class="assess-step" id="step2" style="display:none">
+        <div class="section-label">Section Two — Prior Offences</div>
+        <div class="q-block" id="q2_1_block">
+          <div class="q-id">Assessment Point 2.1</div>
+          <div class="q-text">Has the suspect been convicted of any prior offenses inside or outside of your jurisdiction?</div>
+          <div class="yn-group"><div class="yn-btn" onclick="setYN('q2_1',true,this)">Yes</div><div class="yn-btn" onclick="setYN('q2_1',false,this)">No</div></div>
+        </div>
+        <div class="q-block hidden" id="q2_2_block">
+          <div class="q-id">Assessment Point 2.2</div>
+          <div class="q-text">How many times has the suspect been convicted?</div>
+          <div class="field" style="margin-bottom:0;margin-top:8px"><input id="q2_convictions" type="number" min="1" max="50" value="1" onchange="buildSeverityInputs()" oninput="buildSeverityInputs()"></div>
+        </div>
+        <div class="q-block hidden" id="q2_3_block">
+          <div class="q-id">Assessment Point 2.3</div>
+          <div class="q-text">Rate the severity of each offense (0 = minimal, 1 = maximum severity):</div>
+          <div id="severityContainer"></div>
+        </div>
+        <div class="q-block hidden" id="q2_4_block">
+          <div class="q-id">Assessment Point 2.4</div>
+          <div class="q-text">Has the suspect been banned from your jurisdiction for any of these convictions?</div>
+          <div class="yn-group"><div class="yn-btn" onclick="setYN('q2_4',true,this)">Yes (+2)</div><div class="yn-btn" onclick="setYN('q2_4',false,this)">No</div></div>
+        </div>
+        <div class="q-block hidden" id="q2_4_1_block">
+          <div class="q-id">Assessment Point 2.4.1</div>
+          <div class="q-text">Has the suspect been banned for more than two months?</div>
+          <div class="yn-group"><div class="yn-btn" onclick="setYN('q2_4_1',true,this)">Yes (+0.5)</div><div class="yn-btn" onclick="setYN('q2_4_1',false,this)">No</div></div>
+        </div>
+        <div class="q-block hidden" id="q2_4_2_block">
+          <div class="q-id">Assessment Point 2.4.2</div>
+          <div class="q-text">Has the suspect been banned for more than six months?</div>
+          <div class="yn-group"><div class="yn-btn" onclick="setYN('q2_4_2',true,this)">Yes (+1.0)</div><div class="yn-btn" onclick="setYN('q2_4_2',false,this)">No</div></div>
+        </div>
+        <div class="q-block hidden" id="q2_4_3_block">
+          <div class="q-id">Assessment Point 2.4.3</div>
+          <div class="q-text">Has the suspect been banned for more than one year?</div>
+          <div class="yn-group"><div class="yn-btn" onclick="setYN('q2_4_3',true,this)">Yes (+2.5)</div><div class="yn-btn" onclick="setYN('q2_4_3',false,this)">No</div></div>
+        </div>
+        <div class="q-block hidden" id="q2_5_block">
+          <div class="q-id">Assessment Point 2.5</div>
+          <div class="q-text">Has the suspect been convicted prior to this assessment period for the suspected crime?</div>
+          <div class="yn-group"><div class="yn-btn" onclick="setYN('q2_5',true,this)">Yes (+1.5)</div><div class="yn-btn" onclick="setYN('q2_5',false,this)">No</div></div>
+        </div>
+      </div>
+
+      <!-- Step 3: Section 3 Demeanour -->
+      <div class="assess-step" id="step3" style="display:none">
+        <div class="section-label">Section Three — Demeanour</div>
+        <div class="q-block" id="q3_1_block">
+          <div class="q-id">Assessment Point 3.1</div>
+          <div class="q-text">Has the suspect been acting in a manner that is different from their usual demeanor?</div>
+          <div class="yn-group"><div class="yn-btn" onclick="setYN('q3_1',true,this)">Yes (+1)</div><div class="yn-btn" onclick="setYN('q3_1',false,this)">No</div></div>
+        </div>
+        <div class="q-block hidden" id="q3_1_1_block">
+          <div class="q-id">Assessment Point 3.1.1</div>
+          <div class="q-text">Does this shift in demeanour have a reasonable and known or documented explanation?</div>
+          <div class="q-note">If yes, subtract 1 point. If no, add 1.5 points.</div>
+          <div class="yn-group"><div class="yn-btn" onclick="setYN('q3_1_1',true,this)">Yes (−1)</div><div class="yn-btn" onclick="setYN('q3_1_1',false,this)">No (+1.5)</div></div>
+        </div>
+      </div>
+
+      <!-- Step 4: Section 4 Mediating Factors -->
+      <div class="assess-step" id="step4" style="display:none">
+        <div class="section-label">Section Four — Mediating Factors</div>
+        <div class="q-block" id="q4_1_block">
+          <div class="q-id">Assessment Point 4.1</div>
+          <div class="q-text">At the time of investigation, was or is the suspect a member of your government?</div>
+          <div class="yn-group"><div class="yn-btn" onclick="setYN('q4_1',true,this)">Yes (−1)</div><div class="yn-btn" onclick="setYN('q4_1',false,this)">No</div></div>
+        </div>
+        <div class="q-block hidden" id="q4_1_1_block">
+          <div class="q-id">Assessment Point 4.1.1</div>
+          <div class="q-text">Is the suspect being investigated for crimes committed while in office?</div>
+          <div class="yn-group"><div class="yn-btn" onclick="setYN('q4_1_1',true,this)">Yes (+1)</div><div class="yn-btn" onclick="setYN('q4_1_1',false,this)">No</div></div>
+        </div>
+        <div class="q-block" id="q4_2_block">
+          <div class="q-id">Assessment Point 4.2</div>
+          <div class="q-text">Is the suspect generally well liked, not just by you, but by the jurisdiction's community?</div>
+          <div class="yn-group"><div class="yn-btn" onclick="setYN('q4_2',true,this)">Yes (−1)</div><div class="yn-btn" onclick="setYN('q4_2',false,this)">No</div></div>
+        </div>
+        <div class="q-block" id="q4_3_block">
+          <div class="q-id">Assessment Point 4.3</div>
+          <div class="q-text">If the investigation was initiated because of general knowledge that a crime has been committed, or the mere suspicion a crime has been committed without direct evidence, which you aim to gain through further investigation:</div>
+          <div class="q-note">If yes, subtract 3 points. This accounts for low-evidence preliminary investigations.</div>
+          <div class="yn-group"><div class="yn-btn" onclick="setYN('q4_3',true,this)">Yes (−3)</div><div class="yn-btn" onclick="setYN('q4_3',false,this)">No</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NAV -->
+    <div class="flex-row mt-16" style="justify-content:space-between" id="assessNav">
+      <button class="btn btn-sm btn-cyan" id="prevBtn" onclick="assessNav(-1)" style="visibility:hidden">&laquo; Previous</button>
+      <button class="btn btn-sm" id="nextBtn" onclick="assessNav(1)">Next &raquo;</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ RESULTS SCREEN ═══════════ -->
+<div class="screen" id="resultScreen">
+  <div class="hud-panel" style="max-width:600px" id="resultPanel">
+    <span class="corner-tr"></span><span class="corner-bl"></span>
+    <div class="text-center mb-16">
+      <div class="owl-logo"><svg viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="46" fill="#ff1a1a"/><ellipse cx="36" cy="44" rx="14" ry="16" fill="#050508"/><ellipse cx="64" cy="44" rx="14" ry="16" fill="#050508"/><circle cx="36" cy="44" r="7" fill="#ff1a1a"/><circle cx="64" cy="44" r="7" fill="#ff1a1a"/><circle cx="36" cy="44" r="3" fill="#050508"/><circle cx="64" cy="44" r="3" fill="#050508"/><path d="M44 58 L50 68 L56 58" stroke="#050508" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M30 26 Q50 15 70 26" stroke="#050508" stroke-width="4" fill="none" stroke-linecap="round"/></svg></div>
+    </div>
+    <div id="resultContent"></div>
+    <div class="flex-row mt-24" style="justify-content:center;gap:12px">
+      <button class="btn btn-sm btn-cyan" onclick="newAssessment()">New Assessment</button>
+      <button class="btn btn-sm" onclick="printResult()">Export Report</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+//  APOLLO FRAMEWORK — CORE ENGINE
+//  Version Two: Athena (Server-Side Auth)
+// ═══════════════════════════════════════
+
+// ╔═══════════════════════════════════════════════════════════╗
+// ║  PASTE YOUR APPS SCRIPT DEPLOYMENT URL BELOW             ║
+// ╚═══════════════════════════════════════════════════════════╝
+const API_URL = 'https://script.google.com/macros/s/AKfycbwBgQtsL7uavYTMd2PacrZA__nijMI0MsrRUX0L2rfeLj5ofVRg-hYDc3NFexdhRLJY/exec';
+
+const TOKEN_KEY = 'apollo_session_token';
+
+// ── API HELPER ──
+async function api(action, params = {}) {
+  const body = Object.assign({ action }, params);
+  const token = localStorage.getItem(TOKEN_KEY);
+  if (token) body.token = token;
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(body)
+  });
+  return res.json();
+}
+
+// ── BUTTON LOADING STATES ──
+function btnLoading(btn, loading) {
+  if (loading) {
+    btn.dataset.origText = btn.textContent;
+    btn.textContent = 'PROCESSING...';
+    btn.disabled = true;
+    btn.style.opacity = '0.5';
+  } else {
+    btn.textContent = btn.dataset.origText || btn.textContent;
+    btn.disabled = false;
+    btn.style.opacity = '1';
+  }
+}
+
+// ── INIT ──
+async function init() {
+  document.getElementById('loginUser').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+  document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+  // Validate existing session
+  const token = localStorage.getItem(TOKEN_KEY);
+  if (token) {
+    try {
+      const res = await api('validate', { token });
+      if (res.ok) {
+        currentUser = res.username;
+        currentRole = res.role;
+        if (res.role === 'admin') { showScreen('adminScreen'); refreshUserTable(); }
+        else { document.getElementById('investigator').value = res.username; showScreen('assessScreen'); }
+      } else {
+        localStorage.removeItem(TOKEN_KEY);
+      }
+    } catch (e) {
+      localStorage.removeItem(TOKEN_KEY);
+    }
+  }
+
+  setTimeout(() => { document.getElementById('loadingOverlay').classList.add('fade-out'); }, 800);
+}
+
+let currentUser = null;
+let currentRole = null;
+let currentStep = 0;
+const totalSteps = 5;
+let answers = {};
+
+// ── AUTH ──
+async function doLogin() {
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  const err = document.getElementById('loginErr');
+  err.textContent = '';
+  if (!u || !p) { err.textContent = 'All fields required.'; return; }
+
+  const btn = document.querySelector('#loginScreen .btn');
+  btnLoading(btn, true);
+
+  try {
+    const res = await api('login', { username: u, password: p });
+    if (res.ok) {
+      localStorage.setItem(TOKEN_KEY, res.token);
+      currentUser = u;
+      currentRole = res.role;
+      if (res.role === 'admin') { showScreen('adminScreen'); refreshUserTable(); }
+      else { document.getElementById('investigator').value = u; showScreen('assessScreen'); }
+    } else {
+      err.textContent = 'ACCESS DENIED — ' + (res.error || 'Invalid credentials.');
+    }
+  } catch (e) {
+    err.textContent = 'CONNECTION ERROR — Unable to reach server.';
+  } finally {
+    btnLoading(btn, false);
+  }
+}
+
+async function doLogout() {
+  const btn = event ? event.target : null;
+  if (btn) btnLoading(btn, true);
+
+  try {
+    await api('logout');
+  } catch (e) { /* logout is best-effort */ }
+
+  localStorage.removeItem(TOKEN_KEY);
+  currentUser = null;
+  currentRole = null;
+  resetAssessment();
+  showScreen('loginScreen');
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+  document.getElementById('loginErr').textContent = '';
+  if (btn) btnLoading(btn, false);
+}
+
+// ── ADMIN ──
+async function addUser() {
+  const u = document.getElementById('newUser').value.trim();
+  const p = document.getElementById('newPass').value;
+  const err = document.getElementById('adminErr');
+  err.textContent = '';
+  if (!u || !p) { err.textContent = 'Username and password required.'; return; }
+
+  const btn = document.querySelector('#adminScreen .btn-cyan');
+  btnLoading(btn, true);
+
+  try {
+    const res = await api('adduser', { username: u, password: p });
+    if (res.ok) {
+      document.getElementById('newUser').value = '';
+      document.getElementById('newPass').value = '';
+      refreshUserTable();
+    } else {
+      err.textContent = res.error || 'Failed to add user.';
+    }
+  } catch (e) {
+    err.textContent = 'CONNECTION ERROR — Unable to reach server.';
+  } finally {
+    btnLoading(btn, false);
+  }
+}
+
+async function removeUser(username) {
+  try {
+    const res = await api('removeuser', { username });
+    if (!res.ok) { alert(res.error || 'Failed to remove user.'); }
+    refreshUserTable();
+  } catch (e) {
+    alert('CONNECTION ERROR — Unable to reach server.');
+  }
+}
+
+async function changeAdminPass() {
+  const p = document.getElementById('newAdminPass').value;
+  const err = document.getElementById('adminPassErr');
+  err.textContent = '';
+  err.style.color = '';
+  if (!p || p.length < 4) { err.textContent = 'Password must be at least 4 characters.'; return; }
+
+  const btn = document.querySelector('#adminScreen .btn-danger');
+  btnLoading(btn, true);
+
+  try {
+    const res = await api('changeadminpass', { newPassword: p });
+    if (res.ok) {
+      document.getElementById('newAdminPass').value = '';
+      err.style.color = 'var(--green)';
+      err.textContent = 'Admin key updated.';
+      setTimeout(() => { err.textContent = ''; err.style.color = ''; }, 2000);
+    } else {
+      err.textContent = res.error || 'Failed to update password.';
+    }
+  } catch (e) {
+    err.textContent = 'CONNECTION ERROR — Unable to reach server.';
+  } finally {
+    btnLoading(btn, false);
+  }
+}
+
+async function refreshUserTable() {
+  const tbody = document.getElementById('userTableBody');
+  tbody.innerHTML = '<tr><td colspan="3" style="color:var(--text-dim);text-align:center"><span class="loader-inline"></span> Loading operatives...</td></tr>';
+
+  try {
+    const res = await api('listusers');
+    tbody.innerHTML = '';
+    if (!res.ok) { tbody.innerHTML = '<tr><td colspan="3" style="color:var(--red);text-align:center">' + (res.error || 'Error loading users') + '</td></tr>'; return; }
+    const users = res.users.filter(u => u.role !== 'admin');
+    if (!users.length) { tbody.innerHTML = '<tr><td colspan="3" style="color:var(--text-dim);text-align:center">No operatives registered</td></tr>'; return; }
+    users.forEach(u => {
+      const tr = document.createElement('tr');
+      const safeName = u.username.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]));
+      tr.innerHTML = '<td>' + safeName + '</td><td><span class="badge" style="color:var(--green);border-color:var(--green)">Active</span></td><td><button class="btn btn-sm btn-danger" onclick="removeUser(\'' + safeName.replace(/'/g, "\\'") + '\')">Revoke</button></td>';
+      tbody.appendChild(tr);
+    });
+  } catch (e) {
+    tbody.innerHTML = '<tr><td colspan="3" style="color:var(--red);text-align:center">CONNECTION ERROR</td></tr>';
+  }
+}
+
+// ── SCREEN NAV ──
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ── ASSESSMENT NAV ──
+function assessNav(dir) {
+  const newStep = currentStep + dir;
+  if (newStep < 0) return;
+  if (newStep > 4) { computeResult(); return; }
+  document.getElementById('step' + currentStep).style.display = 'none';
+  currentStep = newStep;
+  document.getElementById('step' + currentStep).style.display = 'block';
+  document.getElementById('prevBtn').style.visibility = currentStep === 0 ? 'hidden' : 'visible';
+  document.getElementById('nextBtn').textContent = currentStep === 4 ? 'Finalize Assessment \u25B6' : 'Next \u00BB';
+  document.getElementById('progressFill').style.width = ((currentStep + 1) / totalSteps * 100) + '%';
+  document.getElementById('assessContainer').scrollTop = 0;
+}
+
+// ── YES/NO TOGGLE ──
+function setYN(key, val, el) {
+  answers[key] = val;
+  const grp = el.parentElement;
+  grp.querySelectorAll('.yn-btn').forEach(b => { b.classList.remove('sel-yes','sel-no'); });
+  el.classList.add(val ? 'sel-yes' : 'sel-no');
+  handleConditionals(key, val);
+}
+function handleConditionals(key, val) {
+  const show = (id, v) => { document.getElementById(id).classList.toggle('hidden', !v); };
+  if (key === 'q1_2') { show('q1_2d_block', val); if (!val) answers.q1_2d = false; }
+  if (key === 'q2_1') {
+    show('q2_2_block', val); show('q2_3_block', val); show('q2_4_block', val); show('q2_5_block', val);
+    if (val) buildSeverityInputs();
+    else { answers.q2_4 = false; answers.q2_4_1 = false; answers.q2_4_2 = false; answers.q2_4_3 = false; answers.q2_5 = false;
+      ['q2_4_1_block','q2_4_2_block','q2_4_3_block'].forEach(id => document.getElementById(id).classList.add('hidden')); }
+  }
+  if (key === 'q2_4') { show('q2_4_1_block', val); if (!val) { answers.q2_4_1 = false; answers.q2_4_2 = false; answers.q2_4_3 = false;
+    ['q2_4_2_block','q2_4_3_block'].forEach(id => document.getElementById(id).classList.add('hidden')); } }
+  if (key === 'q2_4_1') { show('q2_4_2_block', val); if (!val) { answers.q2_4_2 = false; answers.q2_4_3 = false; document.getElementById('q2_4_3_block').classList.add('hidden'); } }
+  if (key === 'q2_4_2') { show('q2_4_3_block', val); if (!val) answers.q2_4_3 = false; }
+  if (key === 'q3_1') { show('q3_1_1_block', val); if (!val) answers.q3_1_1 = undefined; }
+  if (key === 'q4_1') { show('q4_1_1_block', val); if (!val) answers.q4_1_1 = false; }
+}
+
+// ── SEVERITY SLIDERS ──
+function buildSeverityInputs() {
+  const n = Math.max(1, Math.min(50, parseInt(document.getElementById('q2_convictions').value) || 1));
+  const c = document.getElementById('severityContainer');
+  c.innerHTML = '';
+  for (let i = 0; i < n; i++) {
+    const d = document.createElement('div');
+    d.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:6px;padding:6px 10px;border:1px solid var(--border)';
+    d.innerHTML = `<span style="font-family:var(--font-display);font-size:10px;color:var(--red);min-width:80px;letter-spacing:1px">Offence ${i+1}</span>
+      <input type="range" min="0" max="1" step="0.1" value="0.5" oninput="this.nextElementSibling.textContent=this.value" style="flex:1">
+      <span class="severity-val">0.5</span>`;
+    c.appendChild(d);
+  }
+}
+
+// ── SCORING ──
+function computeResult() {
+  let score = 0;
+  const bd = {};
+
+  // Section 1
+  let s1 = 0;
+  if (answers.q1_1) s1 += 1;
+  if (answers.q1_2) { s1 += 1; if (answers.q1_2d) s1 += 1; }
+  if (answers.q1_slur) s1 += 2;
+  bd['Section 1: Conduct'] = s1; score += s1;
+
+  // Section 2
+  let s2 = 0;
+  if (answers.q2_1) {
+    const sliders = document.querySelectorAll('#severityContainer input[type=range]');
+    sliders.forEach(s => { s2 += parseFloat(s.value); });
+    if (answers.q2_4) { s2 += 2; if (answers.q2_4_1) { s2 += 0.5; if (answers.q2_4_2) { s2 += 1; if (answers.q2_4_3) s2 += 2.5; } } }
+    if (answers.q2_5) s2 += 1.5;
+  }
+  bd['Section 2: Prior Offences'] = s2; score += s2;
+
+  // Section 3
+  let s3 = 0;
+  if (answers.q3_1) { s3 += 1; if (answers.q3_1_1 === true) s3 -= 1; else if (answers.q3_1_1 === false) s3 += 1.5; }
+  bd['Section 3: Demeanour'] = s3; score += s3;
+
+  // Section 4
+  let s4 = 0;
+  if (answers.q4_1) { s4 -= 1; if (answers.q4_1_1) s4 += 1; }
+  if (answers.q4_2) s4 -= 1;
+  if (answers.q4_3) s4 -= 3;
+  bd['Section 4: Mediating Factors'] = s4; score += s4;
+
+  score = Math.round(score * 10) / 10;
+  let level, desc, cls;
+  if (score <= 5) { level = 1; desc = 'No Risk Present'; cls = '1'; }
+  else if (score <= 10) { level = 2; desc = 'Potential Risk'; cls = '2'; }
+  else if (score <= 15) { level = 3; desc = 'Risk to the Community'; cls = '3'; }
+  else if (score <= 20) { level = 4; desc = 'Substantial Risk'; cls = '4'; }
+  else { level = 5; desc = 'Danger to the Community'; cls = '5'; }
+
+  showScreen('resultScreen');
+  animateResult(score, level, desc, cls, bd);
+}
+
+function animateResult(score, level, desc, cls, bd) {
+  const rc = document.getElementById('resultContent');
+  const panel = document.getElementById('resultPanel');
+  panel.className = 'hud-panel';
+  rc.innerHTML = `<div class="text-center"><p style="font-family:var(--font-display);font-size:11px;letter-spacing:4px;color:var(--text-dim);text-transform:uppercase" id="analysisText"></p>
+    <div id="scoreReveal" style="opacity:0;margin-top:20px">
+      <p style="font-size:11px;letter-spacing:3px;color:var(--text-dim);font-family:var(--font-display)">ARLA SCORE</p>
+      <div class="result-score" id="scoreNum" style="margin-top:4px">0</div>
+    </div>
+    <div id="levelReveal" style="opacity:0;margin-top:24px">
+      <div class="result-level-num risk-${cls}" id="levelNum"></div>
+      <div class="result-level-desc risk-${cls}" id="levelDesc"></div>
+    </div></div>
+    <div id="breakdownReveal" style="opacity:0">
+      <div class="result-breakdown">
+        <div style="font-family:var(--font-display);font-size:10px;letter-spacing:2px;color:var(--cyan);margin-bottom:8px;text-transform:uppercase">Score Breakdown</div>
+        <div class="rb-row"><span>Subject</span><span>${document.getElementById('suspectName').value || 'N/A'}</span></div>
+        <div class="rb-row"><span>Jurisdiction</span><span>${document.getElementById('jurisdiction').value || 'N/A'}</span></div>
+        <div class="rb-row"><span>Period</span><span>${document.getElementById('assessPeriod').value || '7'} days</span></div>
+        <div class="rb-row"><span>Investigator</span><span>${currentUser}</span></div>
+        <div style="height:8px"></div>
+        ${Object.entries(bd).map(([k,v]) => `<div class="rb-row"><span>${k}</span><span>${v >= 0 ? '+' : ''}${v}</span></div>`).join('')}
+        <div style="height:4px;border-top:1px solid var(--border-hi);margin-top:4px"></div>
+        <div class="rb-row" style="border:none"><span style="color:#fff;font-family:var(--font-display)">Total ARLA Score</span><span style="color:#fff;font-size:16px">${score}</span></div>
+      </div>
+    </div>`;
+
+  // Animate sequence
+  let i = 0;
+  const txt = 'ANALYSIS COMPLETE';
+  const typeEl = document.getElementById('analysisText');
+  const typeInterval = setInterval(() => { typeEl.textContent = txt.slice(0, ++i); if (i >= txt.length) clearInterval(typeInterval); }, 50);
+
+  setTimeout(() => {
+    const scoreEl = document.getElementById('scoreNum');
+    const reveal1 = document.getElementById('scoreReveal');
+    reveal1.style.transition = 'opacity .5s'; reveal1.style.opacity = '1';
+    let cur = -2; const target = score;
+    const step = target > 0 ? 0.1 : -0.1;
+    const counter = setInterval(() => {
+      cur = Math.round((cur + step) * 10) / 10;
+      scoreEl.textContent = cur.toFixed(1);
+      if ((step > 0 && cur >= target) || (step < 0 && cur <= target) || (target === 0 && cur >= 0)) { scoreEl.textContent = target.toFixed(1); clearInterval(counter); }
+    }, 30);
+  }, 1200);
+
+  setTimeout(() => {
+    const reveal2 = document.getElementById('levelReveal');
+    reveal2.style.transition = 'opacity .6s'; reveal2.style.opacity = '1';
+    document.getElementById('levelNum').textContent = 'LEVEL ' + level;
+    document.getElementById('levelDesc').textContent = desc;
+    panel.classList.add('risk-border-' + cls);
+  }, 2400);
+
+  setTimeout(() => {
+    const reveal3 = document.getElementById('breakdownReveal');
+    reveal3.style.transition = 'opacity .6s'; reveal3.style.opacity = '1';
+  }, 3200);
+}
+
+// ── UTILITIES ──
+function newAssessment() { resetAssessment(); showScreen('assessScreen'); }
+function resetAssessment() {
+  currentStep = 0; answers = {};
+  for (let i = 0; i <= 4; i++) { document.getElementById('step' + i).style.display = i === 0 ? 'block' : 'none'; }
+  document.getElementById('progressFill').style.width = '0%';
+  document.getElementById('prevBtn').style.visibility = 'hidden';
+  document.getElementById('nextBtn').textContent = 'Next \u00BB';
+  document.querySelectorAll('.yn-btn').forEach(b => b.classList.remove('sel-yes','sel-no'));
+  document.querySelectorAll('.q-block.hidden').forEach(b => {}); // keep hidden by default
+  ['q1_2d_block','q2_2_block','q2_3_block','q2_4_block','q2_4_1_block','q2_4_2_block','q2_4_3_block','q2_5_block','q3_1_1_block','q4_1_1_block'].forEach(id => document.getElementById(id).classList.add('hidden'));
+  document.getElementById('suspectName').value = '';
+  document.getElementById('assessPeriod').value = '7';
+  document.getElementById('jurisdiction').value = '';
+  document.getElementById('investigator').value = currentUser || '';
+  document.getElementById('severityContainer').innerHTML = '';
+  document.getElementById('q2_convictions').value = '1';
+}
+function printResult() {
+  const content = document.getElementById('resultPanel').innerHTML;
+  const w = window.open('', '_blank');
+  w.document.write(`<!DOCTYPE html><html><head><title>Apollo Assessment Report</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>*{margin:0;padding:0;box-sizing:border-box}body{background:#050508;color:#d0d0d0;font-family:'Share Tech Mono',monospace;padding:40px;font-size:13px}
+    .hud-panel{background:#0c1018;border:1px solid #1a1f2e;padding:32px;max-width:600px;margin:0 auto}
+    .owl-logo{width:80px;height:80px;margin:0 auto 16px}.owl-logo svg{width:100%;height:100%}
+    .result-score{font-family:'Orbitron',sans-serif;font-size:48px;color:#fff}.result-level-num{font-family:'Orbitron',sans-serif;font-size:60px;font-weight:900}
+    .result-level-desc{font-family:'Orbitron',sans-serif;font-size:16px;letter-spacing:5px;text-transform:uppercase;margin-top:8px}
+    .risk-1{color:#00ff88}.risk-2{color:#ffd700}.risk-3{color:#ff8c00}.risk-4{color:#ff4444}.risk-5{color:#cc0000}
+    .result-breakdown{text-align:left;margin-top:24px;padding:16px;border:1px solid #1a1f2e;font-size:12px}
+    .rb-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+    .rb-row span:last-child{color:#00f0ff;font-family:'Orbitron',sans-serif}
+    .text-center{text-align:center}.btn{display:none}</style></head><body>${content}
+    <p style="text-align:center;margin-top:24px;font-size:10px;letter-spacing:3px;color:#661010;text-transform:uppercase;font-family:'Orbitron',sans-serif">Arrephoros Confidential</p></body></html>`);
+  w.document.close(); w.focus(); setTimeout(() => w.print(), 500);
+}
+
+// ── BOOT ──
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
