@@ -1,7 +1,7 @@
 <!--
   ╔══════════════════════════════════════════════════════════════╗
   ║  APOLLO RISK ASSESSMENT FRAMEWORK — Arrephoros Technologies  ║
-  ║  Version Two: Athena (Server-Side Auth)                      ║
+  ║  Version One: Corvus (Server-Side Auth)                      ║
   ╠══════════════════════════════════════════════════════════════╣
   ║                                                              ║
   ║  SETUP:                                                      ║
@@ -22,217 +22,218 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>APOLLO — Arrephoros Technologies PLC</title>
+<title>Apollo — Risk Assessment Framework</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#050508;--bg2:#0a0d12;--bg3:#0d1117;--panel:#0c1018;
-  --red:#ff1a1a;--red-dim:#661010;--cyan:#00f0ff;--cyan-dim:#004a50;
-  --green:#00ff88;--gold:#ffd700;--orange:#ff8c00;--danger:#cc0000;
-  --text:#d0d0d0;--text-dim:#445;--border:#1a1f2e;--border-hi:#2a3050;
-  --font-mono:'Share Tech Mono',monospace;--font-display:'Orbitron',sans-serif;
+  --bg:#ffffff;--bg-secondary:#f5f5f7;--bg-tertiary:#fafafa;
+  --card:#ffffff;--card-hover:#fafafa;
+  --red:#e53935;--red-light:#ffebee;--red-dark:#c62828;
+  --green:#43a047;--green-light:#e8f5e9;
+  --amber:#f9a825;--amber-light:#fff8e1;
+  --orange:#ef6c00;--orange-light:#fff3e0;
+  --danger:#d32f2f;--danger-light:#ffebee;
+  --text:#1d1d1f;--text-secondary:#6e6e73;--text-tertiary:#86868b;
+  --border:#d2d2d7;--border-light:#e8e8ed;
+  --font:'Inter',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --radius:12px;--radius-sm:8px;--radius-lg:16px;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 12px rgba(0,0,0,.08),0 1px 3px rgba(0,0,0,.06);
+  --shadow-lg:0 12px 40px rgba(0,0,0,.1),0 4px 12px rgba(0,0,0,.06);
 }
-html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font-mono);font-size:14px;line-height:1.6}
+html,body{height:100%;overflow:hidden;background:var(--bg-secondary);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
 
-/* ── SCANLINES ── */
-#scanlines{position:fixed;inset:0;z-index:9999;pointer-events:none;
-  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px)}
-#scanlines::after{content:'';position:absolute;inset:0;
-  background:radial-gradient(ellipse at center,transparent 50%,rgba(0,0,0,.4) 100%)}
-
-/* ── GRID BG ── */
-#gridbg{position:fixed;inset:0;z-index:0;opacity:.06;
-  background-image:linear-gradient(var(--cyan) 1px,transparent 1px),linear-gradient(90deg,var(--cyan) 1px,transparent 1px);
-  background-size:60px 60px;animation:gridScroll 20s linear infinite}
-@keyframes gridScroll{to{background-position:60px 60px}}
-
-/* ── SCREEN BASE ── */
+/* ── SCREENS ── */
 .screen{position:fixed;inset:0;z-index:10;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;overflow-y:auto}
 .screen.active{display:flex}
 
-/* ── CORNER BRACKETS ── */
-.hud-panel{position:relative;background:var(--panel);border:1px solid var(--border);padding:32px;max-width:580px;width:100%}
-.hud-panel::before,.hud-panel::after{content:'';position:absolute;width:20px;height:20px;border-color:var(--cyan);border-style:solid;border-width:0;pointer-events:none}
-.hud-panel::before{top:-1px;left:-1px;border-top-width:2px;border-left-width:2px}
-.hud-panel::after{bottom:-1px;right:-1px;border-bottom-width:2px;border-right-width:2px}
-.hud-panel .corner-bl,.hud-panel .corner-tr{position:absolute;width:20px;height:20px;border-color:var(--cyan);border-style:solid;border-width:0;pointer-events:none}
-.hud-panel .corner-tr{top:-1px;right:-1px;border-top-width:2px;border-right-width:2px}
-.hud-panel .corner-bl{bottom:-1px;left:-1px;border-bottom-width:2px;border-left-width:2px}
+/* ── CARD ── */
+.card{background:var(--card);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);padding:40px;max-width:480px;width:100%}
+.card-wide{max-width:640px}
 
-/* ── WATERMARK ── */
-.watermark{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;letter-spacing:4px;color:var(--red-dim);z-index:9998;text-transform:uppercase;font-family:var(--font-display);pointer-events:none}
-
-/* ── OWL SVG ── */
-.owl-logo{width:80px;height:80px;margin:0 auto 16px}
-.owl-logo svg{width:100%;height:100%;filter:drop-shadow(0 0 12px var(--red))}
-.owl-logo-sm{width:36px;height:36px;display:inline-block;vertical-align:middle}
-.owl-logo-sm svg{width:100%;height:100%;filter:drop-shadow(0 0 6px var(--red))}
+/* ── LOGO ── */
+.logo{width:64px;height:64px;margin:0 auto 20px}
+.logo-sm{width:32px;height:32px}
+.logo svg{width:100%;height:100%}
 
 /* ── TYPOGRAPHY ── */
-.display-title{font-family:var(--font-display);font-weight:900;font-size:24px;letter-spacing:3px;text-transform:uppercase;color:#fff;text-shadow:0 0 20px var(--red),0 0 40px rgba(255,26,26,.3)}
-.sub-title{font-family:var(--font-display);font-size:11px;letter-spacing:5px;color:var(--cyan);text-transform:uppercase;margin-top:4px}
-.section-label{font-family:var(--font-display);font-size:13px;letter-spacing:4px;color:var(--cyan);text-transform:uppercase;margin-bottom:20px;padding-bottom:8px;border-bottom:1px solid var(--border)}
-.warning-text{color:var(--red);font-size:11px;letter-spacing:3px;text-transform:uppercase;animation:warningPulse 2s ease-in-out infinite}
-@keyframes warningPulse{0%,100%{opacity:.6}50%{opacity:1}}
+h1{font-size:28px;font-weight:700;letter-spacing:-.02em;color:var(--text)}
+h2{font-size:20px;font-weight:600;letter-spacing:-.01em;color:var(--text)}
+h3{font-size:15px;font-weight:600;color:var(--text)}
+.subtitle{font-size:14px;color:var(--text-secondary);font-weight:400;margin-top:4px}
+.caption{font-size:12px;color:var(--text-tertiary);font-weight:500;text-transform:uppercase;letter-spacing:.06em}
+.version-tag{display:inline-block;font-size:11px;font-weight:600;color:var(--text-tertiary);background:var(--bg-secondary);border-radius:6px;padding:2px 8px;letter-spacing:.04em;text-transform:uppercase;margin-top:8px}
 
-/* ── FORM ELEMENTS ── */
-.field{margin-bottom:18px}
-.field label{display:block;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--cyan);margin-bottom:6px}
-.field input,.field select,.field textarea{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:10px 14px;font-family:var(--font-mono);font-size:13px;outline:none;transition:border-color .3s,box-shadow .3s}
-.field input:focus,.field select:focus{border-color:var(--cyan);box-shadow:0 0 8px rgba(0,240,255,.15)}
-.field input::placeholder{color:var(--text-dim)}
+/* ── FORM ── */
+.field{margin-bottom:16px}
+.field label{display:block;font-size:13px;font-weight:500;color:var(--text-secondary);margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%;background:var(--bg-secondary);border:1px solid var(--border-light);color:var(--text);padding:11px 14px;font-family:var(--font);font-size:15px;border-radius:var(--radius-sm);outline:none;transition:border-color .2s,box-shadow .2s}
+.field input:focus,.field select:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(229,57,53,.12)}
+.field input::placeholder{color:var(--text-tertiary)}
 
 /* ── BUTTONS ── */
-.btn{display:inline-block;padding:10px 28px;font-family:var(--font-display);font-size:12px;letter-spacing:3px;text-transform:uppercase;border:1px solid var(--red);color:var(--red);background:transparent;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
-.btn:hover{background:var(--red);color:#fff;box-shadow:0 0 20px rgba(255,26,26,.3)}
-.btn-cyan{border-color:var(--cyan);color:var(--cyan)}
-.btn-cyan:hover{background:var(--cyan);color:var(--bg);box-shadow:0 0 20px rgba(0,240,255,.3)}
-.btn-sm{padding:6px 16px;font-size:10px;letter-spacing:2px}
-.btn-danger{border-color:#ff4444;color:#ff4444}
-.btn-danger:hover{background:#ff4444;color:#fff}
-.btn-full{width:100%;text-align:center;margin-top:8px}
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:11px 24px;font-family:var(--font);font-size:14px;font-weight:600;border:none;border-radius:var(--radius-sm);cursor:pointer;transition:all .2s;gap:6px}
+.btn-primary{background:var(--red);color:#fff}
+.btn-primary:hover{background:var(--red-dark);box-shadow:var(--shadow-md)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.btn-secondary{background:var(--bg-secondary);color:var(--text);border:1px solid var(--border)}
+.btn-secondary:hover{background:var(--border-light)}
+.btn-danger{background:var(--danger-light);color:var(--danger);border:1px solid transparent}
+.btn-danger:hover{background:var(--danger);color:#fff}
+.btn-sm{padding:7px 14px;font-size:13px;border-radius:6px}
+.btn-full{width:100%}
+.btn-ghost{background:transparent;color:var(--text-secondary);padding:7px 12px}
+.btn-ghost:hover{background:var(--bg-secondary);color:var(--text)}
 
 /* ── YES/NO TOGGLE ── */
-.yn-group{display:flex;gap:8px;margin-top:6px}
-.yn-group .yn-btn{flex:1;padding:8px;text-align:center;border:1px solid var(--border);color:var(--text-dim);font-family:var(--font-mono);font-size:12px;cursor:pointer;transition:all .2s;text-transform:uppercase;letter-spacing:2px}
-.yn-btn.sel-yes{border-color:var(--red);color:var(--red);background:rgba(255,26,26,.08)}
-.yn-btn.sel-no{border-color:var(--green);color:var(--green);background:rgba(0,255,136,.05)}
+.yn-group{display:flex;gap:8px;margin-top:8px}
+.yn-btn{flex:1;padding:10px;text-align:center;border:1px solid var(--border-light);color:var(--text-secondary);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;border-radius:var(--radius-sm);background:var(--bg-tertiary)}
+.yn-btn:hover{border-color:var(--border);background:var(--bg-secondary)}
+.yn-btn.sel-yes{border-color:var(--red);color:var(--red);background:var(--red-light)}
+.yn-btn.sel-no{border-color:var(--green);color:var(--green);background:var(--green-light)}
 
 /* ── QUESTION BLOCK ── */
-.q-block{padding:14px 16px;border-left:2px solid var(--border);margin-bottom:14px;transition:all .3s;opacity:1}
+.q-block{padding:16px;border-radius:var(--radius-sm);background:var(--bg-tertiary);margin-bottom:12px;transition:all .3s}
 .q-block.hidden{display:none}
-.q-block .q-id{font-family:var(--font-display);font-size:10px;color:var(--red);letter-spacing:2px;margin-bottom:4px}
-.q-block .q-text{font-size:13px;color:var(--text);margin-bottom:8px}
-.q-block .q-note{font-size:11px;color:var(--text-dim);margin-top:6px;font-style:italic}
+.q-block .q-id{font-size:11px;font-weight:600;color:var(--red);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.q-block .q-text{font-size:14px;color:var(--text);line-height:1.5}
+.q-block .q-note{font-size:13px;color:var(--text-tertiary);margin-top:6px;line-height:1.5}
 
 /* ── SLIDER ── */
-input[type=range]{-webkit-appearance:none;width:100%;height:4px;background:var(--border);outline:none;border-radius:2px;margin:8px 0}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;background:var(--cyan);border-radius:50%;cursor:pointer;box-shadow:0 0 8px var(--cyan)}
-.severity-val{font-family:var(--font-display);color:var(--cyan);font-size:13px;text-align:right}
+input[type=range]{-webkit-appearance:none;width:100%;height:6px;background:var(--border-light);outline:none;border-radius:3px;margin:8px 0}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;background:var(--red);border-radius:50%;cursor:pointer;box-shadow:var(--shadow)}
+.severity-val{font-weight:600;color:var(--red);font-size:14px;text-align:right}
 
 /* ── PROGRESS BAR ── */
-.progress-bar{width:100%;height:3px;background:var(--border);margin-bottom:24px;position:relative}
-.progress-bar .fill{height:100%;background:linear-gradient(90deg,var(--red),var(--cyan));transition:width .4s ease;box-shadow:0 0 8px var(--cyan)}
+.progress-bar{width:100%;height:4px;background:var(--border-light);border-radius:2px;margin-bottom:24px;overflow:hidden}
+.progress-bar .fill{height:100%;background:var(--red);transition:width .4s ease;border-radius:2px}
 
-/* ── ADMIN TABLE ── */
+/* ── TABLE ── */
 .user-table{width:100%;border-collapse:collapse;margin:12px 0}
-.user-table th,.user-table td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);font-size:12px}
-.user-table th{color:var(--cyan);font-family:var(--font-display);font-size:10px;letter-spacing:2px;text-transform:uppercase}
-.user-table tr:hover td{background:rgba(0,240,255,.03)}
+.user-table th,.user-table td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border-light);font-size:14px}
+.user-table th{color:var(--text-tertiary);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.user-table tr:hover td{background:var(--bg-tertiary)}
+
+/* ── BADGE ── */
+.badge{display:inline-block;padding:3px 10px;font-size:12px;font-weight:600;border-radius:20px}
+.badge-active{background:var(--green-light);color:var(--green)}
 
 /* ── RESULTS ── */
-.result-box{text-align:center;padding:40px 24px;border:2px solid var(--border);position:relative;overflow:hidden}
-.result-box::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity 1s}
-.result-score{font-family:var(--font-display);font-size:48px;color:#fff;text-shadow:0 0 30px currentColor}
-.result-level-num{font-family:var(--font-display);font-size:80px;font-weight:900;line-height:1}
-.result-level-desc{font-family:var(--font-display);font-size:16px;letter-spacing:5px;text-transform:uppercase;margin-top:8px}
-.result-breakdown{text-align:left;margin-top:24px;padding:16px;border:1px solid var(--border);font-size:12px}
-.result-breakdown .rb-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04)}
-.result-breakdown .rb-row span:last-child{color:var(--cyan);font-family:var(--font-display)}
+.result-box{text-align:center;padding:40px 24px}
+.result-score{font-size:56px;font-weight:700;color:var(--text);letter-spacing:-.03em}
+.result-level-num{font-size:72px;font-weight:800;line-height:1;letter-spacing:-.03em}
+.result-level-desc{font-size:17px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;margin-top:8px;color:var(--text-secondary)}
+.result-breakdown{text-align:left;margin-top:28px;padding:20px;border:1px solid var(--border-light);border-radius:var(--radius);font-size:14px}
+.result-breakdown .rb-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border-light)}
+.result-breakdown .rb-row:last-child{border-bottom:none}
+.result-breakdown .rb-row span:first-child{color:var(--text-secondary)}
+.result-breakdown .rb-row span:last-child{font-weight:600;color:var(--text)}
 
-/* ── TYPING ANIMATION ── */
-.typewriter{overflow:hidden;white-space:nowrap;border-right:2px solid var(--cyan);animation:typing 1.5s steps(30) forwards,blinkCaret .6s step-end infinite}
-@keyframes typing{from{width:0}to{width:100%}}
-@keyframes blinkCaret{50%{border-color:transparent}}
+/* ── RISK COLORS ── */
+.risk-1{color:var(--green)}.risk-2{color:var(--amber)}.risk-3{color:var(--orange)}.risk-4{color:#e53935}.risk-5{color:var(--danger)}
+.risk-border-1{border-color:var(--green)}.risk-border-2{border-color:var(--amber)}.risk-border-3{border-color:var(--orange)}
+.risk-border-4{border-color:#e53935}.risk-border-5{border-color:var(--danger)}
 
-/* ── LOADING SCREEN ── */
-#loadingOverlay{position:fixed;inset:0;z-index:10000;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .8s}
+/* ── LOADING ── */
+#loadingOverlay{position:fixed;inset:0;z-index:10000;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s}
 #loadingOverlay.fade-out{opacity:0;pointer-events:none}
-.loader-ring{width:60px;height:60px;border:2px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:spin 1s linear infinite}
+.loader-ring{width:40px;height:40px;border:3px solid var(--border-light);border-top-color:var(--red);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* ── RISK LEVEL COLORS ── */
-.risk-1{color:var(--green)}.risk-2{color:var(--gold)}.risk-3{color:var(--orange)}.risk-4{color:#ff4444}.risk-5{color:var(--danger);animation:dangerPulse 1s ease-in-out infinite}
-@keyframes dangerPulse{0%,100%{text-shadow:0 0 20px var(--danger)}50%{text-shadow:0 0 60px var(--danger),0 0 100px rgba(204,0,0,.4)}}
-.risk-border-1{border-color:var(--green);box-shadow:0 0 30px rgba(0,255,136,.15)}
-.risk-border-2{border-color:var(--gold);box-shadow:0 0 30px rgba(255,215,0,.15)}
-.risk-border-3{border-color:var(--orange);box-shadow:0 0 30px rgba(255,140,0,.15)}
-.risk-border-4{border-color:#ff4444;box-shadow:0 0 30px rgba(255,68,68,.2)}
-.risk-border-5{border-color:var(--danger);box-shadow:0 0 40px rgba(204,0,0,.3);animation:dangerBorder 1s ease-in-out infinite}
-@keyframes dangerBorder{0%,100%{box-shadow:0 0 40px rgba(204,0,0,.3)}50%{box-shadow:0 0 80px rgba(204,0,0,.5)}}
-
 /* ── SCROLLBAR ── */
-::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}::-webkit-scrollbar-thumb:hover{background:var(--border-hi)}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}::-webkit-scrollbar-thumb:hover{background:var(--text-tertiary)}
 
-/* ── MISC ── */
-.mt-16{margin-top:16px}.mt-24{margin-top:24px}.mt-8{margin-top:8px}.mb-8{margin-bottom:8px}.mb-16{margin-bottom:16px}
-.text-center{text-align:center}.text-red{color:var(--red)}.text-cyan{color:var(--cyan)}.text-dim{color:var(--text-dim)}
+/* ── SECTION DIVIDER ── */
+.divider{height:1px;background:var(--border-light);margin:20px 0}
+
+/* ── HELPERS ── */
+.mt-4{margin-top:4px}.mt-8{margin-top:8px}.mt-12{margin-top:12px}.mt-16{margin-top:16px}.mt-20{margin-top:20px}.mt-24{margin-top:24px}
+.mb-4{margin-bottom:4px}.mb-8{margin-bottom:8px}.mb-12{margin-bottom:12px}.mb-16{margin-bottom:16px}
+.text-center{text-align:center}
+.text-red{color:var(--red)}.text-secondary{color:var(--text-secondary)}
 .flex-row{display:flex;gap:8px;align-items:center}
-.error-msg{color:var(--red);font-size:12px;min-height:18px;margin-top:8px}
-.badge{display:inline-block;padding:2px 10px;font-size:10px;letter-spacing:2px;font-family:var(--font-display);text-transform:uppercase;border:1px solid;border-radius:2px}
-.assess-container{max-height:calc(100vh - 120px);overflow-y:auto;padding-right:8px}
+.error-msg{color:var(--danger);font-size:13px;font-weight:500;min-height:20px;margin-top:8px}
+.assess-container{max-height:calc(100vh - 160px);overflow-y:auto;padding-right:4px}
 
-/* ── ANIMATE IN ── */
-@keyframes fadeSlideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-.animate-in{animation:fadeSlideUp .5s ease forwards}
-.delay-1{animation-delay:.1s;opacity:0}.delay-2{animation-delay:.2s;opacity:0}.delay-3{animation-delay:.3s;opacity:0}.delay-4{animation-delay:.4s;opacity:0}
+/* ── ANIMATE ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.animate-in{animation:fadeUp .4s ease forwards}
+
+/* ── PANEL SECTION ── */
+.panel-section{padding:20px;border:1px solid var(--border-light);border-radius:var(--radius);margin-bottom:16px}
 </style>
 </head>
 <body>
 
-<!-- SCANLINES + GRID -->
-<div id="scanlines"></div>
-<div id="gridbg"></div>
-<div class="watermark">Arrephoros Confidential</div>
-
 <!-- LOADING -->
 <div id="loadingOverlay">
+  <div class="logo" style="margin-bottom:24px"><svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="100" cy="100" r="96" fill="#e53935"/>
+    <path d="M70 55 Q65 35 80 40 Q90 28 100 25 Q110 28 120 40 Q135 35 130 55" fill="white"/>
+    <ellipse cx="100" cy="95" rx="48" ry="55" fill="white"/>
+    <ellipse cx="82" cy="85" rx="18" ry="20" fill="#e53935"/>
+    <ellipse cx="118" cy="85" rx="18" ry="20" fill="#e53935"/>
+    <circle cx="82" cy="85" r="9" fill="white"/>
+    <circle cx="118" cy="85" r="9" fill="white"/>
+    <circle cx="82" cy="85" r="5" fill="#1d1d1f"/>
+    <circle cx="118" cy="85" r="5" fill="#1d1d1f"/>
+    <path d="M94 100 L100 110 L106 100" stroke="#e53935" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <path d="M75 120 Q100 145 125 120" stroke="#e53935" stroke-width="2" fill="none" opacity=".3"/>
+  </svg></div>
   <div class="loader-ring"></div>
-  <p style="margin-top:16px;font-family:var(--font-display);font-size:10px;letter-spacing:4px;color:var(--text-dim);text-transform:uppercase">Initializing Apollo Framework</p>
 </div>
 
 <!-- ═══════════ LOGIN SCREEN ═══════════ -->
 <div class="screen active" id="loginScreen">
-  <div class="hud-panel" style="max-width:420px">
-    <span class="corner-tr"></span><span class="corner-bl"></span>
+  <div class="card" style="max-width:400px">
     <div class="text-center">
-      <div class="owl-logo"><svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="50" cy="50" r="46" fill="#ff1a1a"/>
-        <ellipse cx="36" cy="44" rx="14" ry="16" fill="#050508"/>
-        <ellipse cx="64" cy="44" rx="14" ry="16" fill="#050508"/>
-        <circle cx="36" cy="44" r="7" fill="#ff1a1a"/>
-        <circle cx="64" cy="44" r="7" fill="#ff1a1a"/>
-        <circle cx="36" cy="44" r="3" fill="#050508"/>
-        <circle cx="64" cy="44" r="3" fill="#050508"/>
-        <path d="M44 58 L50 68 L56 58" stroke="#050508" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-        <path d="M30 26 Q50 15 70 26" stroke="#050508" stroke-width="4" fill="none" stroke-linecap="round"/>
-        <path d="M22 38 Q16 20 32 22" stroke="#050508" stroke-width="3" fill="none"/>
-        <path d="M78 38 Q84 20 68 22" stroke="#050508" stroke-width="3" fill="none"/>
+      <div class="logo"><svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="100" cy="100" r="96" fill="#e53935"/>
+        <path d="M70 55 Q65 35 80 40 Q90 28 100 25 Q110 28 120 40 Q135 35 130 55" fill="white"/>
+        <ellipse cx="100" cy="95" rx="48" ry="55" fill="white"/>
+        <ellipse cx="82" cy="85" rx="18" ry="20" fill="#e53935"/>
+        <ellipse cx="118" cy="85" rx="18" ry="20" fill="#e53935"/>
+        <circle cx="82" cy="85" r="9" fill="white"/>
+        <circle cx="118" cy="85" r="9" fill="white"/>
+        <circle cx="82" cy="85" r="5" fill="#1d1d1f"/>
+        <circle cx="118" cy="85" r="5" fill="#1d1d1f"/>
+        <path d="M94 100 L100 110 L106 100" stroke="#e53935" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M75 120 Q100 145 125 120" stroke="#e53935" stroke-width="2" fill="none" opacity=".3"/>
       </svg></div>
-      <div class="display-title" style="font-size:20px">Apollo</div>
-      <div class="sub-title" style="margin-top:2px;font-size:9px">Risk Assessment Framework</div>
-      <p style="margin-top:12px;font-size:10px;letter-spacing:2px;color:var(--text-dim)">ARREPHOROS TECHNOLOGIES PLC</p>
-      <p class="warning-text" style="margin-top:16px">&#9650; Authorized Personnel Only &#9650;</p>
+      <h1>Apollo</h1>
+      <p class="subtitle">Risk Assessment Framework</p>
+      <div class="version-tag">Corvus</div>
     </div>
-    <div style="margin-top:24px">
-      <div class="field"><label>Operative ID</label><input type="text" id="loginUser" placeholder="Enter username" autocomplete="off"></div>
-      <div class="field"><label>Access Key</label><input type="password" id="loginPass" placeholder="Enter password" autocomplete="off"></div>
+    <div style="margin-top:28px">
+      <div class="field"><label>Username</label><input type="text" id="loginUser" placeholder="Enter your username" autocomplete="off"></div>
+      <div class="field"><label>Password</label><input type="password" id="loginPass" placeholder="Enter your password" autocomplete="off"></div>
       <div class="error-msg" id="loginErr"></div>
-      <button class="btn btn-full" onclick="doLogin()">Authenticate</button>
+      <button class="btn btn-primary btn-full" onclick="doLogin()">Sign In</button>
     </div>
+    <p class="text-center mt-16" style="font-size:12px;color:var(--text-tertiary)">Arrephoros Technologies PLC</p>
   </div>
 </div>
 
 <!-- ═══════════ ADMIN SCREEN ═══════════ -->
 <div class="screen" id="adminScreen">
-  <div class="hud-panel" style="max-width:620px">
-    <span class="corner-tr"></span><span class="corner-bl"></span>
-    <div class="flex-row" style="justify-content:space-between;margin-bottom:20px">
-      <div>
-        <div class="section-label" style="margin-bottom:0;border:none;padding:0">System Administration</div>
+  <div class="card card-wide">
+    <div class="flex-row" style="justify-content:space-between;margin-bottom:24px">
+      <div class="flex-row">
+        <div class="logo-sm"><svg viewBox="0 0 200 200" fill="none"><circle cx="100" cy="100" r="96" fill="#e53935"/><path d="M70 55 Q65 35 80 40 Q90 28 100 25 Q110 28 120 40 Q135 35 130 55" fill="white"/><ellipse cx="100" cy="95" rx="48" ry="55" fill="white"/><ellipse cx="82" cy="85" rx="18" ry="20" fill="#e53935"/><ellipse cx="118" cy="85" rx="18" ry="20" fill="#e53935"/><circle cx="82" cy="85" r="9" fill="white"/><circle cx="118" cy="85" r="9" fill="white"/><circle cx="82" cy="85" r="5" fill="#1d1d1f"/><circle cx="118" cy="85" r="5" fill="#1d1d1f"/><path d="M94 100 L100 110 L106 100" stroke="#e53935" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></div>
+        <h2>Administration</h2>
       </div>
-      <button class="btn btn-sm" onclick="doLogout()">Logout</button>
+      <button class="btn btn-ghost btn-sm" onclick="doLogout()">Sign Out</button>
     </div>
 
     <!-- Add User -->
-    <div style="padding:16px;border:1px solid var(--border);margin-bottom:16px">
-      <div class="section-label" style="font-size:10px;margin-bottom:12px">Register Operative</div>
-      <div class="flex-row" style="gap:8px;flex-wrap:wrap">
+    <div class="panel-section">
+      <h3 class="mb-12">Add Operative</h3>
+      <div class="flex-row" style="gap:10px;flex-wrap:wrap">
         <div class="field" style="flex:1;min-width:140px;margin-bottom:0"><input id="newUser" placeholder="Username"></div>
         <div class="field" style="flex:1;min-width:140px;margin-bottom:0"><input id="newPass" type="password" placeholder="Password"></div>
-        <button class="btn btn-cyan btn-sm" onclick="addUser()">Add</button>
+        <button class="btn btn-primary btn-sm" onclick="addUser()">Add</button>
       </div>
       <div class="error-msg" id="adminErr"></div>
     </div>
@@ -240,17 +241,17 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
     <!-- User List -->
     <div style="max-height:240px;overflow-y:auto">
       <table class="user-table">
-        <thead><tr><th>Operative ID</th><th>Status</th><th>Action</th></tr></thead>
+        <thead><tr><th>Operative</th><th>Status</th><th>Action</th></tr></thead>
         <tbody id="userTableBody"></tbody>
       </table>
     </div>
 
     <!-- Change Admin Pass -->
-    <div style="padding:16px;border:1px solid var(--border);margin-top:16px">
-      <div class="section-label" style="font-size:10px;margin-bottom:12px">Change Admin Access Key</div>
-      <div class="flex-row" style="gap:8px">
-        <div class="field" style="flex:1;margin-bottom:0"><input id="newAdminPass" type="password" placeholder="New admin password"></div>
-        <button class="btn btn-sm btn-danger" onclick="changeAdminPass()">Update</button>
+    <div class="panel-section" style="margin-top:16px;margin-bottom:0">
+      <h3 class="mb-12">Change Admin Password</h3>
+      <div class="flex-row" style="gap:10px">
+        <div class="field" style="flex:1;margin-bottom:0"><input id="newAdminPass" type="password" placeholder="New password"></div>
+        <button class="btn btn-danger btn-sm" onclick="changeAdminPass()">Update</button>
       </div>
       <div class="error-msg" id="adminPassErr"></div>
     </div>
@@ -259,47 +260,46 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 
 <!-- ═══════════ ASSESSMENT SCREEN ═══════════ -->
 <div class="screen" id="assessScreen">
-  <div class="hud-panel" style="max-width:660px">
-    <span class="corner-tr"></span><span class="corner-bl"></span>
+  <div class="card card-wide">
     <div class="flex-row" style="justify-content:space-between;margin-bottom:4px">
       <div class="flex-row">
-        <div class="owl-logo-sm"><svg viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="46" fill="#ff1a1a"/><ellipse cx="36" cy="44" rx="14" ry="16" fill="#050508"/><ellipse cx="64" cy="44" rx="14" ry="16" fill="#050508"/><circle cx="36" cy="44" r="7" fill="#ff1a1a"/><circle cx="64" cy="44" r="7" fill="#ff1a1a"/><circle cx="36" cy="44" r="3" fill="#050508"/><circle cx="64" cy="44" r="3" fill="#050508"/><path d="M44 58 L50 68 L56 58" stroke="#050508" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M30 26 Q50 15 70 26" stroke="#050508" stroke-width="4" fill="none" stroke-linecap="round"/></svg></div>
-        <span style="font-family:var(--font-display);font-size:14px;letter-spacing:3px;color:#fff;margin-left:4px">APOLLO</span>
+        <div class="logo-sm"><svg viewBox="0 0 200 200" fill="none"><circle cx="100" cy="100" r="96" fill="#e53935"/><path d="M70 55 Q65 35 80 40 Q90 28 100 25 Q110 28 120 40 Q135 35 130 55" fill="white"/><ellipse cx="100" cy="95" rx="48" ry="55" fill="white"/><ellipse cx="82" cy="85" rx="18" ry="20" fill="#e53935"/><ellipse cx="118" cy="85" rx="18" ry="20" fill="#e53935"/><circle cx="82" cy="85" r="9" fill="white"/><circle cx="118" cy="85" r="9" fill="white"/><circle cx="82" cy="85" r="5" fill="#1d1d1f"/><circle cx="118" cy="85" r="5" fill="#1d1d1f"/><path d="M94 100 L100 110 L106 100" stroke="#e53935" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></div>
+        <h2>Apollo</h2>
       </div>
-      <button class="btn btn-sm" onclick="doLogout()">Logout</button>
+      <button class="btn btn-ghost btn-sm" onclick="doLogout()">Sign Out</button>
     </div>
     <div class="progress-bar"><div class="fill" id="progressFill" style="width:0%"></div></div>
 
     <div class="assess-container" id="assessContainer">
-      <!-- Step 0: Suspect Info -->
+      <!-- Step 0: Subject Intake -->
       <div class="assess-step active" id="step0">
-        <div class="section-label">Subject Intake</div>
-        <div class="field"><label>Subject Name / Identifier</label><input id="suspectName" placeholder="Enter suspect designation"></div>
+        <h3 class="mb-16">Subject Intake</h3>
+        <div class="field"><label>Subject Name / Identifier</label><input id="suspectName" placeholder="Enter subject name"></div>
         <div class="field"><label>Assessment Period (Days)</label><input id="assessPeriod" type="number" min="1" max="30" value="7" placeholder="1-30"></div>
-        <div class="field"><label>Jurisdiction</label><input id="jurisdiction" placeholder="Enter jurisdiction name"></div>
+        <div class="field"><label>Jurisdiction</label><input id="jurisdiction" placeholder="Enter jurisdiction"></div>
         <div class="field"><label>Investigating Operative</label><input id="investigator" readonly></div>
       </div>
 
       <!-- Step 1: Section 1 Conduct -->
       <div class="assess-step" id="step1" style="display:none">
-        <div class="section-label">Section One — Conduct</div>
+        <h3 class="mb-16">Section One — Conduct</h3>
         <div class="q-block" id="q1_1_block">
-          <div class="q-id">Assessment Point 1.1</div>
+          <div class="q-id">1.1</div>
           <div class="q-text">Has the suspect been exhibiting negative behavior in their contact with your service?</div>
           <div class="yn-group"><div class="yn-btn" onclick="setYN('q1_1',true,this)">Yes (+1)</div><div class="yn-btn" onclick="setYN('q1_1',false,this)">No</div></div>
         </div>
         <div class="q-block" id="q1_2_block">
-          <div class="q-id">Assessment Point 1.2</div>
+          <div class="q-id">1.2</div>
           <div class="q-text">Has the suspect been exhibiting negative behavior towards members of the general population?</div>
           <div class="yn-group"><div class="yn-btn" onclick="setYN('q1_2',true,this)">Yes (+1)</div><div class="yn-btn" onclick="setYN('q1_2',false,this)">No</div></div>
         </div>
         <div class="q-block hidden" id="q1_2d_block">
-          <div class="q-id">Assessment Point 1.2 — Supplementary</div>
+          <div class="q-id">1.2 — Supplementary</div>
           <div class="q-text">Has the suspect acted discriminatorily towards any member for their association with or membership within a protected class in your jurisdiction?</div>
           <div class="yn-group"><div class="yn-btn" onclick="setYN('q1_2d',true,this)">Yes (+1)</div><div class="yn-btn" onclick="setYN('q1_2d',false,this)">No</div></div>
         </div>
         <div class="q-block" id="q1_slur_block">
-          <div class="q-id">Assessment Point 1 — Slurs Addendum</div>
+          <div class="q-id">1 — Slurs Addendum</div>
           <div class="q-text">Has the suspect used slurs in their speech during the term of investigation?</div>
           <div class="q-note">This does not include commonly understood expletive phrases, but a pejorative, derogatory, or insulting word/phrase designed to demean, belittle, or show contempt toward individuals or groups based on race, ethnicity, sexual orientation, gender, or other characteristics.</div>
           <div class="yn-group"><div class="yn-btn" onclick="setYN('q1_slur',true,this)">Yes (+2)</div><div class="yn-btn" onclick="setYN('q1_slur',false,this)">No</div></div>
@@ -308,44 +308,44 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 
       <!-- Step 2: Section 2 Prior Offences -->
       <div class="assess-step" id="step2" style="display:none">
-        <div class="section-label">Section Two — Prior Offences</div>
+        <h3 class="mb-16">Section Two — Prior Offences</h3>
         <div class="q-block" id="q2_1_block">
-          <div class="q-id">Assessment Point 2.1</div>
+          <div class="q-id">2.1</div>
           <div class="q-text">Has the suspect been convicted of any prior offenses inside or outside of your jurisdiction?</div>
           <div class="yn-group"><div class="yn-btn" onclick="setYN('q2_1',true,this)">Yes</div><div class="yn-btn" onclick="setYN('q2_1',false,this)">No</div></div>
         </div>
         <div class="q-block hidden" id="q2_2_block">
-          <div class="q-id">Assessment Point 2.2</div>
+          <div class="q-id">2.2</div>
           <div class="q-text">How many times has the suspect been convicted?</div>
           <div class="field" style="margin-bottom:0;margin-top:8px"><input id="q2_convictions" type="number" min="1" max="50" value="1" onchange="buildSeverityInputs()" oninput="buildSeverityInputs()"></div>
         </div>
         <div class="q-block hidden" id="q2_3_block">
-          <div class="q-id">Assessment Point 2.3</div>
+          <div class="q-id">2.3</div>
           <div class="q-text">Rate the severity of each offense (0 = minimal, 1 = maximum severity):</div>
           <div id="severityContainer"></div>
         </div>
         <div class="q-block hidden" id="q2_4_block">
-          <div class="q-id">Assessment Point 2.4</div>
+          <div class="q-id">2.4</div>
           <div class="q-text">Has the suspect been banned from your jurisdiction for any of these convictions?</div>
           <div class="yn-group"><div class="yn-btn" onclick="setYN('q2_4',true,this)">Yes (+2)</div><div class="yn-btn" onclick="setYN('q2_4',false,this)">No</div></div>
         </div>
         <div class="q-block hidden" id="q2_4_1_block">
-          <div class="q-id">Assessment Point 2.4.1</div>
+          <div class="q-id">2.4.1</div>
           <div class="q-text">Has the suspect been banned for more than two months?</div>
           <div class="yn-group"><div class="yn-btn" onclick="setYN('q2_4_1',true,this)">Yes (+0.5)</div><div class="yn-btn" onclick="setYN('q2_4_1',false,this)">No</div></div>
         </div>
         <div class="q-block hidden" id="q2_4_2_block">
-          <div class="q-id">Assessment Point 2.4.2</div>
+          <div class="q-id">2.4.2</div>
           <div class="q-text">Has the suspect been banned for more than six months?</div>
           <div class="yn-group"><div class="yn-btn" onclick="setYN('q2_4_2',true,this)">Yes (+1.0)</div><div class="yn-btn" onclick="setYN('q2_4_2',false,this)">No</div></div>
         </div>
         <div class="q-block hidden" id="q2_4_3_block">
-          <div class="q-id">Assessment Point 2.4.3</div>
+          <div class="q-id">2.4.3</div>
           <div class="q-text">Has the suspect been banned for more than one year?</div>
           <div class="yn-group"><div class="yn-btn" onclick="setYN('q2_4_3',true,this)">Yes (+2.5)</div><div class="yn-btn" onclick="setYN('q2_4_3',false,this)">No</div></div>
         </div>
         <div class="q-block hidden" id="q2_5_block">
-          <div class="q-id">Assessment Point 2.5</div>
+          <div class="q-id">2.5</div>
           <div class="q-text">Has the suspect been convicted prior to this assessment period for the suspected crime?</div>
           <div class="yn-group"><div class="yn-btn" onclick="setYN('q2_5',true,this)">Yes (+1.5)</div><div class="yn-btn" onclick="setYN('q2_5',false,this)">No</div></div>
         </div>
@@ -353,66 +353,65 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 
       <!-- Step 3: Section 3 Demeanour -->
       <div class="assess-step" id="step3" style="display:none">
-        <div class="section-label">Section Three — Demeanour</div>
+        <h3 class="mb-16">Section Three — Demeanour</h3>
         <div class="q-block" id="q3_1_block">
-          <div class="q-id">Assessment Point 3.1</div>
+          <div class="q-id">3.1</div>
           <div class="q-text">Has the suspect been acting in a manner that is different from their usual demeanor?</div>
           <div class="yn-group"><div class="yn-btn" onclick="setYN('q3_1',true,this)">Yes (+1)</div><div class="yn-btn" onclick="setYN('q3_1',false,this)">No</div></div>
         </div>
         <div class="q-block hidden" id="q3_1_1_block">
-          <div class="q-id">Assessment Point 3.1.1</div>
+          <div class="q-id">3.1.1</div>
           <div class="q-text">Does this shift in demeanour have a reasonable and known or documented explanation?</div>
           <div class="q-note">If yes, subtract 1 point. If no, add 1.5 points.</div>
-          <div class="yn-group"><div class="yn-btn" onclick="setYN('q3_1_1',true,this)">Yes (−1)</div><div class="yn-btn" onclick="setYN('q3_1_1',false,this)">No (+1.5)</div></div>
+          <div class="yn-group"><div class="yn-btn" onclick="setYN('q3_1_1',true,this)">Yes (-1)</div><div class="yn-btn" onclick="setYN('q3_1_1',false,this)">No (+1.5)</div></div>
         </div>
       </div>
 
       <!-- Step 4: Section 4 Mediating Factors -->
       <div class="assess-step" id="step4" style="display:none">
-        <div class="section-label">Section Four — Mediating Factors</div>
+        <h3 class="mb-16">Section Four — Mediating Factors</h3>
         <div class="q-block" id="q4_1_block">
-          <div class="q-id">Assessment Point 4.1</div>
+          <div class="q-id">4.1</div>
           <div class="q-text">At the time of investigation, was or is the suspect a member of your government?</div>
-          <div class="yn-group"><div class="yn-btn" onclick="setYN('q4_1',true,this)">Yes (−1)</div><div class="yn-btn" onclick="setYN('q4_1',false,this)">No</div></div>
+          <div class="yn-group"><div class="yn-btn" onclick="setYN('q4_1',true,this)">Yes (-1)</div><div class="yn-btn" onclick="setYN('q4_1',false,this)">No</div></div>
         </div>
         <div class="q-block hidden" id="q4_1_1_block">
-          <div class="q-id">Assessment Point 4.1.1</div>
+          <div class="q-id">4.1.1</div>
           <div class="q-text">Is the suspect being investigated for crimes committed while in office?</div>
           <div class="yn-group"><div class="yn-btn" onclick="setYN('q4_1_1',true,this)">Yes (+1)</div><div class="yn-btn" onclick="setYN('q4_1_1',false,this)">No</div></div>
         </div>
         <div class="q-block" id="q4_2_block">
-          <div class="q-id">Assessment Point 4.2</div>
+          <div class="q-id">4.2</div>
           <div class="q-text">Is the suspect generally well liked, not just by you, but by the jurisdiction's community?</div>
-          <div class="yn-group"><div class="yn-btn" onclick="setYN('q4_2',true,this)">Yes (−1)</div><div class="yn-btn" onclick="setYN('q4_2',false,this)">No</div></div>
+          <div class="yn-group"><div class="yn-btn" onclick="setYN('q4_2',true,this)">Yes (-1)</div><div class="yn-btn" onclick="setYN('q4_2',false,this)">No</div></div>
         </div>
         <div class="q-block" id="q4_3_block">
-          <div class="q-id">Assessment Point 4.3</div>
+          <div class="q-id">4.3</div>
           <div class="q-text">If the investigation was initiated because of general knowledge that a crime has been committed, or the mere suspicion a crime has been committed without direct evidence, which you aim to gain through further investigation:</div>
           <div class="q-note">If yes, subtract 3 points. This accounts for low-evidence preliminary investigations.</div>
-          <div class="yn-group"><div class="yn-btn" onclick="setYN('q4_3',true,this)">Yes (−3)</div><div class="yn-btn" onclick="setYN('q4_3',false,this)">No</div></div>
+          <div class="yn-group"><div class="yn-btn" onclick="setYN('q4_3',true,this)">Yes (-3)</div><div class="yn-btn" onclick="setYN('q4_3',false,this)">No</div></div>
         </div>
       </div>
     </div>
 
     <!-- NAV -->
-    <div class="flex-row mt-16" style="justify-content:space-between" id="assessNav">
-      <button class="btn btn-sm btn-cyan" id="prevBtn" onclick="assessNav(-1)" style="visibility:hidden">&laquo; Previous</button>
-      <button class="btn btn-sm" id="nextBtn" onclick="assessNav(1)">Next &raquo;</button>
+    <div class="flex-row mt-20" style="justify-content:space-between" id="assessNav">
+      <button class="btn btn-secondary btn-sm" id="prevBtn" onclick="assessNav(-1)" style="visibility:hidden">&larr; Previous</button>
+      <button class="btn btn-primary btn-sm" id="nextBtn" onclick="assessNav(1)">Next &rarr;</button>
     </div>
   </div>
 </div>
 
 <!-- ═══════════ RESULTS SCREEN ═══════════ -->
 <div class="screen" id="resultScreen">
-  <div class="hud-panel" style="max-width:600px" id="resultPanel">
-    <span class="corner-tr"></span><span class="corner-bl"></span>
+  <div class="card card-wide" id="resultPanel">
     <div class="text-center mb-16">
-      <div class="owl-logo"><svg viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="46" fill="#ff1a1a"/><ellipse cx="36" cy="44" rx="14" ry="16" fill="#050508"/><ellipse cx="64" cy="44" rx="14" ry="16" fill="#050508"/><circle cx="36" cy="44" r="7" fill="#ff1a1a"/><circle cx="64" cy="44" r="7" fill="#ff1a1a"/><circle cx="36" cy="44" r="3" fill="#050508"/><circle cx="64" cy="44" r="3" fill="#050508"/><path d="M44 58 L50 68 L56 58" stroke="#050508" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M30 26 Q50 15 70 26" stroke="#050508" stroke-width="4" fill="none" stroke-linecap="round"/></svg></div>
+      <div class="logo"><svg viewBox="0 0 200 200" fill="none"><circle cx="100" cy="100" r="96" fill="#e53935"/><path d="M70 55 Q65 35 80 40 Q90 28 100 25 Q110 28 120 40 Q135 35 130 55" fill="white"/><ellipse cx="100" cy="95" rx="48" ry="55" fill="white"/><ellipse cx="82" cy="85" rx="18" ry="20" fill="#e53935"/><ellipse cx="118" cy="85" rx="18" ry="20" fill="#e53935"/><circle cx="82" cy="85" r="9" fill="white"/><circle cx="118" cy="85" r="9" fill="white"/><circle cx="82" cy="85" r="5" fill="#1d1d1f"/><circle cx="118" cy="85" r="5" fill="#1d1d1f"/><path d="M94 100 L100 110 L106 100" stroke="#e53935" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></div>
     </div>
     <div id="resultContent"></div>
     <div class="flex-row mt-24" style="justify-content:center;gap:12px">
-      <button class="btn btn-sm btn-cyan" onclick="newAssessment()">New Assessment</button>
-      <button class="btn btn-sm" onclick="printResult()">Export Report</button>
+      <button class="btn btn-primary btn-sm" onclick="newAssessment()">New Assessment</button>
+      <button class="btn btn-secondary btn-sm" onclick="printResult()">Export Report</button>
     </div>
   </div>
 </div>
@@ -420,7 +419,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 <script>
 // ═══════════════════════════════════════
 //  APOLLO FRAMEWORK — CORE ENGINE
-//  Version Two: Athena (Server-Side Auth)
+//  Version One: Corvus (Server-Side Auth)
 // ═══════════════════════════════════════
 
 // ╔═══════════════════════════════════════════════════════════╗
@@ -447,7 +446,7 @@ async function api(action, params = {}) {
 function btnLoading(btn, loading) {
   if (loading) {
     btn.dataset.origText = btn.textContent;
-    btn.textContent = 'PROCESSING...';
+    btn.textContent = 'Processing...';
     btn.disabled = true;
     btn.style.opacity = '0.5';
   } else {
@@ -462,7 +461,6 @@ async function init() {
   document.getElementById('loginUser').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
   document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 
-  // Validate existing session
   const token = localStorage.getItem(TOKEN_KEY);
   if (token) {
     try {
@@ -480,7 +478,7 @@ async function init() {
     }
   }
 
-  setTimeout(() => { document.getElementById('loadingOverlay').classList.add('fade-out'); }, 800);
+  setTimeout(() => { document.getElementById('loadingOverlay').classList.add('fade-out'); }, 600);
 }
 
 let currentUser = null;
@@ -497,7 +495,7 @@ async function doLogin() {
   err.textContent = '';
   if (!u || !p) { err.textContent = 'All fields required.'; return; }
 
-  const btn = document.querySelector('#loginScreen .btn');
+  const btn = document.querySelector('#loginScreen .btn-primary');
   btnLoading(btn, true);
 
   try {
@@ -509,10 +507,10 @@ async function doLogin() {
       if (res.role === 'admin') { showScreen('adminScreen'); refreshUserTable(); }
       else { document.getElementById('investigator').value = u; showScreen('assessScreen'); }
     } else {
-      err.textContent = 'ACCESS DENIED — ' + (res.error || 'Invalid credentials.');
+      err.textContent = res.error || 'Invalid credentials.';
     }
   } catch (e) {
-    err.textContent = 'CONNECTION ERROR — Unable to reach server.';
+    err.textContent = 'Unable to reach server.';
   } finally {
     btnLoading(btn, false);
   }
@@ -522,9 +520,7 @@ async function doLogout() {
   const btn = event ? event.target : null;
   if (btn) btnLoading(btn, true);
 
-  try {
-    await api('logout');
-  } catch (e) { /* logout is best-effort */ }
+  try { await api('logout'); } catch (e) {}
 
   localStorage.removeItem(TOKEN_KEY);
   currentUser = null;
@@ -545,7 +541,7 @@ async function addUser() {
   err.textContent = '';
   if (!u || !p) { err.textContent = 'Username and password required.'; return; }
 
-  const btn = document.querySelector('#adminScreen .btn-cyan');
+  const btn = document.querySelector('#adminScreen .btn-primary');
   btnLoading(btn, true);
 
   try {
@@ -558,7 +554,7 @@ async function addUser() {
       err.textContent = res.error || 'Failed to add user.';
     }
   } catch (e) {
-    err.textContent = 'CONNECTION ERROR — Unable to reach server.';
+    err.textContent = 'Unable to reach server.';
   } finally {
     btnLoading(btn, false);
   }
@@ -570,7 +566,7 @@ async function removeUser(username) {
     if (!res.ok) { alert(res.error || 'Failed to remove user.'); }
     refreshUserTable();
   } catch (e) {
-    alert('CONNECTION ERROR — Unable to reach server.');
+    alert('Unable to reach server.');
   }
 }
 
@@ -589,13 +585,13 @@ async function changeAdminPass() {
     if (res.ok) {
       document.getElementById('newAdminPass').value = '';
       err.style.color = 'var(--green)';
-      err.textContent = 'Admin key updated.';
+      err.textContent = 'Password updated.';
       setTimeout(() => { err.textContent = ''; err.style.color = ''; }, 2000);
     } else {
       err.textContent = res.error || 'Failed to update password.';
     }
   } catch (e) {
-    err.textContent = 'CONNECTION ERROR — Unable to reach server.';
+    err.textContent = 'Unable to reach server.';
   } finally {
     btnLoading(btn, false);
   }
@@ -603,22 +599,22 @@ async function changeAdminPass() {
 
 async function refreshUserTable() {
   const tbody = document.getElementById('userTableBody');
-  tbody.innerHTML = '<tr><td colspan="3" style="color:var(--text-dim);text-align:center"><span class="loader-inline"></span> Loading operatives...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="3" style="color:var(--text-tertiary);text-align:center;padding:20px">Loading...</td></tr>';
 
   try {
     const res = await api('listusers');
     tbody.innerHTML = '';
-    if (!res.ok) { tbody.innerHTML = '<tr><td colspan="3" style="color:var(--red);text-align:center">' + (res.error || 'Error loading users') + '</td></tr>'; return; }
+    if (!res.ok) { tbody.innerHTML = '<tr><td colspan="3" style="color:var(--danger);text-align:center">' + (res.error || 'Error') + '</td></tr>'; return; }
     const users = res.users.filter(u => u.role !== 'admin');
-    if (!users.length) { tbody.innerHTML = '<tr><td colspan="3" style="color:var(--text-dim);text-align:center">No operatives registered</td></tr>'; return; }
+    if (!users.length) { tbody.innerHTML = '<tr><td colspan="3" style="color:var(--text-tertiary);text-align:center;padding:20px">No operatives registered</td></tr>'; return; }
     users.forEach(u => {
       const tr = document.createElement('tr');
       const safeName = u.username.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]));
-      tr.innerHTML = '<td>' + safeName + '</td><td><span class="badge" style="color:var(--green);border-color:var(--green)">Active</span></td><td><button class="btn btn-sm btn-danger" onclick="removeUser(\'' + safeName.replace(/'/g, "\\'") + '\')">Revoke</button></td>';
+      tr.innerHTML = '<td>' + safeName + '</td><td><span class="badge badge-active">Active</span></td><td><button class="btn btn-danger btn-sm" onclick="removeUser(\'' + safeName.replace(/'/g, "\\'") + '\')">Remove</button></td>';
       tbody.appendChild(tr);
     });
   } catch (e) {
-    tbody.innerHTML = '<tr><td colspan="3" style="color:var(--red);text-align:center">CONNECTION ERROR</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="3" style="color:var(--danger);text-align:center">Connection error</td></tr>';
   }
 }
 
@@ -637,7 +633,7 @@ function assessNav(dir) {
   currentStep = newStep;
   document.getElementById('step' + currentStep).style.display = 'block';
   document.getElementById('prevBtn').style.visibility = currentStep === 0 ? 'hidden' : 'visible';
-  document.getElementById('nextBtn').textContent = currentStep === 4 ? 'Finalize Assessment \u25B6' : 'Next \u00BB';
+  document.getElementById('nextBtn').textContent = currentStep === 4 ? 'Finalize Assessment' : 'Next \u2192';
   document.getElementById('progressFill').style.width = ((currentStep + 1) / totalSteps * 100) + '%';
   document.getElementById('assessContainer').scrollTop = 0;
 }
@@ -674,8 +670,8 @@ function buildSeverityInputs() {
   c.innerHTML = '';
   for (let i = 0; i < n; i++) {
     const d = document.createElement('div');
-    d.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:6px;padding:6px 10px;border:1px solid var(--border)';
-    d.innerHTML = `<span style="font-family:var(--font-display);font-size:10px;color:var(--red);min-width:80px;letter-spacing:1px">Offence ${i+1}</span>
+    d.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:8px;padding:8px 12px;background:var(--bg-secondary);border-radius:8px';
+    d.innerHTML = `<span style="font-size:13px;font-weight:600;color:var(--red);min-width:80px">Offence ${i+1}</span>
       <input type="range" min="0" max="1" step="0.1" value="0.5" oninput="this.nextElementSibling.textContent=this.value" style="flex:1">
       <span class="severity-val">0.5</span>`;
     c.appendChild(d);
@@ -687,14 +683,12 @@ function computeResult() {
   let score = 0;
   const bd = {};
 
-  // Section 1
   let s1 = 0;
   if (answers.q1_1) s1 += 1;
   if (answers.q1_2) { s1 += 1; if (answers.q1_2d) s1 += 1; }
   if (answers.q1_slur) s1 += 2;
   bd['Section 1: Conduct'] = s1; score += s1;
 
-  // Section 2
   let s2 = 0;
   if (answers.q2_1) {
     const sliders = document.querySelectorAll('#severityContainer input[type=range]');
@@ -704,12 +698,10 @@ function computeResult() {
   }
   bd['Section 2: Prior Offences'] = s2; score += s2;
 
-  // Section 3
   let s3 = 0;
   if (answers.q3_1) { s3 += 1; if (answers.q3_1_1 === true) s3 -= 1; else if (answers.q3_1_1 === false) s3 += 1.5; }
   bd['Section 3: Demeanour'] = s3; score += s3;
 
-  // Section 4
   let s4 = 0;
   if (answers.q4_1) { s4 -= 1; if (answers.q4_1_1) s4 += 1; }
   if (answers.q4_2) s4 -= 1;
@@ -731,35 +723,34 @@ function computeResult() {
 function animateResult(score, level, desc, cls, bd) {
   const rc = document.getElementById('resultContent');
   const panel = document.getElementById('resultPanel');
-  panel.className = 'hud-panel';
-  rc.innerHTML = `<div class="text-center"><p style="font-family:var(--font-display);font-size:11px;letter-spacing:4px;color:var(--text-dim);text-transform:uppercase" id="analysisText"></p>
+  rc.innerHTML = `<div class="text-center">
+    <p style="font-size:13px;font-weight:500;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.1em" id="analysisText"></p>
     <div id="scoreReveal" style="opacity:0;margin-top:20px">
-      <p style="font-size:11px;letter-spacing:3px;color:var(--text-dim);font-family:var(--font-display)">ARLA SCORE</p>
+      <p class="caption">ARLA Score</p>
       <div class="result-score" id="scoreNum" style="margin-top:4px">0</div>
     </div>
     <div id="levelReveal" style="opacity:0;margin-top:24px">
       <div class="result-level-num risk-${cls}" id="levelNum"></div>
-      <div class="result-level-desc risk-${cls}" id="levelDesc"></div>
+      <div class="result-level-desc" id="levelDesc"></div>
     </div></div>
     <div id="breakdownReveal" style="opacity:0">
       <div class="result-breakdown">
-        <div style="font-family:var(--font-display);font-size:10px;letter-spacing:2px;color:var(--cyan);margin-bottom:8px;text-transform:uppercase">Score Breakdown</div>
+        <div class="caption mb-8">Score Breakdown</div>
         <div class="rb-row"><span>Subject</span><span>${document.getElementById('suspectName').value || 'N/A'}</span></div>
         <div class="rb-row"><span>Jurisdiction</span><span>${document.getElementById('jurisdiction').value || 'N/A'}</span></div>
         <div class="rb-row"><span>Period</span><span>${document.getElementById('assessPeriod').value || '7'} days</span></div>
         <div class="rb-row"><span>Investigator</span><span>${currentUser}</span></div>
         <div style="height:8px"></div>
         ${Object.entries(bd).map(([k,v]) => `<div class="rb-row"><span>${k}</span><span>${v >= 0 ? '+' : ''}${v}</span></div>`).join('')}
-        <div style="height:4px;border-top:1px solid var(--border-hi);margin-top:4px"></div>
-        <div class="rb-row" style="border:none"><span style="color:#fff;font-family:var(--font-display)">Total ARLA Score</span><span style="color:#fff;font-size:16px">${score}</span></div>
+        <div style="height:1px;background:var(--border-light);margin:8px 0"></div>
+        <div class="rb-row" style="border:none"><span style="font-weight:700;color:var(--text)">Total ARLA Score</span><span style="font-size:18px;font-weight:700">${score}</span></div>
       </div>
     </div>`;
 
-  // Animate sequence
   let i = 0;
-  const txt = 'ANALYSIS COMPLETE';
+  const txt = 'Analysis Complete';
   const typeEl = document.getElementById('analysisText');
-  const typeInterval = setInterval(() => { typeEl.textContent = txt.slice(0, ++i); if (i >= txt.length) clearInterval(typeInterval); }, 50);
+  const typeInterval = setInterval(() => { typeEl.textContent = txt.slice(0, ++i); if (i >= txt.length) clearInterval(typeInterval); }, 40);
 
   setTimeout(() => {
     const scoreEl = document.getElementById('scoreNum');
@@ -772,20 +763,19 @@ function animateResult(score, level, desc, cls, bd) {
       scoreEl.textContent = cur.toFixed(1);
       if ((step > 0 && cur >= target) || (step < 0 && cur <= target) || (target === 0 && cur >= 0)) { scoreEl.textContent = target.toFixed(1); clearInterval(counter); }
     }, 30);
-  }, 1200);
+  }, 1000);
 
   setTimeout(() => {
     const reveal2 = document.getElementById('levelReveal');
     reveal2.style.transition = 'opacity .6s'; reveal2.style.opacity = '1';
-    document.getElementById('levelNum').textContent = 'LEVEL ' + level;
+    document.getElementById('levelNum').textContent = 'Level ' + level;
     document.getElementById('levelDesc').textContent = desc;
-    panel.classList.add('risk-border-' + cls);
-  }, 2400);
+  }, 2000);
 
   setTimeout(() => {
     const reveal3 = document.getElementById('breakdownReveal');
     reveal3.style.transition = 'opacity .6s'; reveal3.style.opacity = '1';
-  }, 3200);
+  }, 2800);
 }
 
 // ── UTILITIES ──
@@ -795,9 +785,8 @@ function resetAssessment() {
   for (let i = 0; i <= 4; i++) { document.getElementById('step' + i).style.display = i === 0 ? 'block' : 'none'; }
   document.getElementById('progressFill').style.width = '0%';
   document.getElementById('prevBtn').style.visibility = 'hidden';
-  document.getElementById('nextBtn').textContent = 'Next \u00BB';
+  document.getElementById('nextBtn').textContent = 'Next \u2192';
   document.querySelectorAll('.yn-btn').forEach(b => b.classList.remove('sel-yes','sel-no'));
-  document.querySelectorAll('.q-block.hidden').forEach(b => {}); // keep hidden by default
   ['q1_2d_block','q2_2_block','q2_3_block','q2_4_block','q2_4_1_block','q2_4_2_block','q2_4_3_block','q2_5_block','q3_1_1_block','q4_1_1_block'].forEach(id => document.getElementById(id).classList.add('hidden'));
   document.getElementById('suspectName').value = '';
   document.getElementById('assessPeriod').value = '7';
@@ -810,18 +799,20 @@ function printResult() {
   const content = document.getElementById('resultPanel').innerHTML;
   const w = window.open('', '_blank');
   w.document.write(`<!DOCTYPE html><html><head><title>Apollo Assessment Report</title>
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
-    <style>*{margin:0;padding:0;box-sizing:border-box}body{background:#050508;color:#d0d0d0;font-family:'Share Tech Mono',monospace;padding:40px;font-size:13px}
-    .hud-panel{background:#0c1018;border:1px solid #1a1f2e;padding:32px;max-width:600px;margin:0 auto}
-    .owl-logo{width:80px;height:80px;margin:0 auto 16px}.owl-logo svg{width:100%;height:100%}
-    .result-score{font-family:'Orbitron',sans-serif;font-size:48px;color:#fff}.result-level-num{font-family:'Orbitron',sans-serif;font-size:60px;font-weight:900}
-    .result-level-desc{font-family:'Orbitron',sans-serif;font-size:16px;letter-spacing:5px;text-transform:uppercase;margin-top:8px}
-    .risk-1{color:#00ff88}.risk-2{color:#ffd700}.risk-3{color:#ff8c00}.risk-4{color:#ff4444}.risk-5{color:#cc0000}
-    .result-breakdown{text-align:left;margin-top:24px;padding:16px;border:1px solid #1a1f2e;font-size:12px}
-    .rb-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04)}
-    .rb-row span:last-child{color:#00f0ff;font-family:'Orbitron',sans-serif}
-    .text-center{text-align:center}.btn{display:none}</style></head><body>${content}
-    <p style="text-align:center;margin-top:24px;font-size:10px;letter-spacing:3px;color:#661010;text-transform:uppercase;font-family:'Orbitron',sans-serif">Arrephoros Confidential</p></body></html>`);
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>*{margin:0;padding:0;box-sizing:border-box}body{background:#fff;color:#1d1d1f;font-family:'Inter',system-ui,sans-serif;padding:40px;font-size:14px;-webkit-font-smoothing:antialiased}
+    .card{max-width:600px;margin:0 auto}
+    .logo{width:64px;height:64px;margin:0 auto 16px}.logo svg{width:100%;height:100%}
+    .result-score{font-size:56px;font-weight:700;color:#1d1d1f}.result-level-num{font-size:72px;font-weight:800}
+    .result-level-desc{font-size:17px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;margin-top:8px;color:#6e6e73}
+    .risk-1{color:#43a047}.risk-2{color:#f9a825}.risk-3{color:#ef6c00}.risk-4{color:#e53935}.risk-5{color:#d32f2f}
+    .result-breakdown{text-align:left;margin-top:24px;padding:20px;border:1px solid #e8e8ed;border-radius:12px;font-size:14px}
+    .rb-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #e8e8ed}
+    .rb-row:last-child{border-bottom:none}
+    .rb-row span:first-child{color:#6e6e73}.rb-row span:last-child{font-weight:600}
+    .caption{font-size:12px;color:#86868b;font-weight:500;text-transform:uppercase;letter-spacing:.06em}
+    .text-center{text-align:center}.btn{display:none}.mb-8{margin-bottom:8px}</style></head><body>${content}
+    <p style="text-align:center;margin-top:32px;font-size:11px;color:#86868b">Arrephoros Technologies PLC — Confidential</p></body></html>`);
   w.document.close(); w.focus(); setTimeout(() => w.print(), 500);
 }
 
