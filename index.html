@@ -164,9 +164,21 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 
 /* ── PANEL SECTION ── */
 .panel-section{padding:20px;border:1px solid var(--border-light);border-radius:var(--radius);margin-bottom:16px}
+
+/* ── COMPANY WATERMARK ── */
+.company-watermark{position:fixed;bottom:16px;right:20px;z-index:9998;opacity:.3;pointer-events:none}
+.company-watermark img{height:28px;display:block}
+
+/* ── SCORE+LEVEL ROW ── */
+.score-level-row{display:flex;align-items:center;justify-content:center;gap:32px;margin-top:20px}
+.score-level-row .score-col{text-align:center}
+.score-level-row .level-col{text-align:center}
 </style>
 </head>
 <body>
+
+<!-- COMPANY WATERMARK (all pages) -->
+<div class="company-watermark"><img src="arrephoros-logo.png" alt="Arrephoros Technologies"></div>
 
 <!-- LOADING -->
 <div id="loadingOverlay">
@@ -700,9 +712,9 @@ function animateResult(score, level, desc, cls, bd) {
   const panel = document.getElementById('resultPanel');
   rc.innerHTML = `<div class="text-center">
     <p style="font-size:13px;font-weight:500;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.1em" id="analysisText"></p>
-    <div id="scoreReveal" style="opacity:0;margin-top:20px;display:flex;align-items:baseline;justify-content:center;gap:16px">
-      <div><p class="caption">ARLA Score</p><div class="result-score" id="scoreNum" style="margin-top:4px">0</div></div>
-      <div id="levelReveal" style="opacity:0"><div class="result-level-num risk-${cls}" id="levelNum"></div><div class="result-level-desc" id="levelDesc"></div></div>
+    <div id="scoreReveal" class="score-level-row" style="opacity:0">
+      <div class="score-col"><p class="caption">ARLA Score</p><div class="result-score" id="scoreNum" style="margin-top:4px">0</div></div>
+      <div class="level-col" id="levelReveal" style="opacity:0"><div class="result-level-num risk-${cls}" id="levelNum" style="font-size:56px"></div><div class="result-level-desc" id="levelDesc"></div></div>
     </div></div>
     <div id="breakdownReveal" style="opacity:0">
       <div class="result-breakdown">
