@@ -712,9 +712,9 @@ function animateResult(score, level, desc, cls, bd) {
   const panel = document.getElementById('resultPanel');
   rc.innerHTML = `<div class="text-center">
     <p style="font-size:13px;font-weight:500;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.1em" id="analysisText"></p>
-    <div id="scoreReveal" class="score-level-row" style="opacity:0">
-      <div class="score-col"><p class="caption">ARLA Score</p><div class="result-score" id="scoreNum" style="margin-top:4px">0</div></div>
-      <div class="level-col" id="levelReveal" style="opacity:0"><div class="result-level-num risk-${cls}" id="levelNum" style="font-size:56px"></div><div class="result-level-desc" id="levelDesc"></div></div>
+    <div id="scoreReveal" style="opacity:0;margin-top:20px">
+      <div style="display:flex;align-items:baseline;justify-content:center;gap:24px"><span class="caption">ARLA Score</span><span class="result-level-desc" id="levelDesc" style="opacity:0"></span></div>
+      <div style="display:flex;align-items:baseline;justify-content:center;gap:24px"><span class="result-score" id="scoreNum">0</span><span class="result-level-num risk-${cls}" id="levelNum" style="font-size:56px;opacity:0"></span></div>
     </div></div>
     <div id="breakdownReveal" style="opacity:0">
       <div class="result-breakdown">
@@ -749,10 +749,12 @@ function animateResult(score, level, desc, cls, bd) {
   }, 1000);
 
   setTimeout(() => {
-    const reveal2 = document.getElementById('levelReveal');
-    reveal2.style.transition = 'opacity .6s'; reveal2.style.opacity = '1';
-    document.getElementById('levelNum').textContent = 'Level ' + level;
-    document.getElementById('levelDesc').textContent = desc;
+    const levelNum = document.getElementById('levelNum');
+    const levelDesc = document.getElementById('levelDesc');
+    levelNum.textContent = 'Level ' + level;
+    levelDesc.textContent = desc;
+    levelNum.style.transition = 'opacity .6s'; levelNum.style.opacity = '1';
+    levelDesc.style.transition = 'opacity .6s'; levelDesc.style.opacity = '1';
   }, 2000);
 
   setTimeout(() => {
